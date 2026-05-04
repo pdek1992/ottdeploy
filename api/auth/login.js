@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     const { data: user, error: userError } = await supabase
       .from('access_users')
       .select('id, role, email, legacy_user_id')
-      .or(`email.eq.${identifier},legacy_user_id.eq.${identifier}`)
+      .or(`email.eq."${identifier}",legacy_user_id.eq."${identifier}"`)
       .single();
 
     if (userError || !user) {
@@ -88,7 +88,11 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ success: true });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error("[LOGIN API ERROR]", err);
+    return res.status(500).json({ 
+      error: 'Internal server error', 
+      message: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 }

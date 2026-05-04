@@ -4,7 +4,7 @@ This project has been migrated from a static, file-based GitHub Raw architecture
 
 ## Architecture Improvements
 
-1.  **Secure Authentication**: Moved from client-side email/ID checks to server-side Argon2id hashing with `HttpOnly` secure cookies.
+1.  **Secure Authentication**: Moved from client-side email/ID checks to server-side bcrypt hashing with `HttpOnly` secure cookies.
 2.  **Dynamic Catalog**: Metadata is now fetched from a Supabase Postgres database via serverless functions, eliminating the need for `metadata.json` updates in Git.
 3.  **Server-Gated DRM**: ClearKey licenses are delivered via `/api/license`, gated by active session verification. No keys are exposed in the frontend.
 4.  **Observability Ingestion**: Client metrics are pushed to `/api/metrics/ingest`, which proxies them to Grafana Cloud, removing the need for a separate Cloudflare Worker.
