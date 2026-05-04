@@ -2,15 +2,7 @@
 // No Next.js dependencies allowed here in a plain Vercel project
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/:path*'],
 };
 
 export function middleware(req, event) {
@@ -18,7 +10,14 @@ export function middleware(req, event) {
   const pathname = url.pathname;
 
   // Skip middleware for API routes and static files to avoid recursion and overhead
-  if (pathname.startsWith('/api/') || pathname.includes('.')) {
+  if (
+    pathname.startsWith('/api/') || 
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/assets/') ||
+    pathname.startsWith('/styles/') ||
+    pathname.includes('.') ||
+    pathname === '/favicon.ico'
+  ) {
     return new Response(null, { headers: { 'x-middleware-next': '1' } });
   }
 

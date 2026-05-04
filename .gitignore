@@ -45,3 +45,4 @@ AndroidApp/
 secrets.js
 #keys/observability.json
 .env.example
+.vercel
