@@ -1,5 +1,5 @@
 import { supabase } from '../../src/lib/supabase.js';
-import argon2 from 'argon2';
+import bcrypt from 'bcryptjs';
 import cookie from 'cookie';
 import crypto from 'crypto';
 
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
         .single();
 
       if (credentials) {
-        isValid = await argon2.verify(credentials.password_hash, password);
+        isValid = await bcrypt.compare(password, credentials.password_hash);
       } else {
         // 4. Default Password Logic
         // If it's a legacy_user_id login, password = legacy_user_id

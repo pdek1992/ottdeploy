@@ -250,13 +250,22 @@
       });
 
       if (!response.ok) {
-        const result = await response.json();
-        setAuthMessage(result.error || "Unable to sign in.", true);
+        let errorMsg = "Unable to sign in.";
+        try {
+          const result = await response.json();
+          errorMsg = result.error || errorMsg;
+        } catch (e) {
+          errorMsg = `Server error (${response.status})`;
+        }
+        setAuthMessage(errorMsg, true);
         return;
       }
 
       // After successful login, fetch the session to get user details
-      const sessionRes = await fetch("/api/auth/session");
+      const sessionRes = await fetch(config.api.session);
+      if (!sessionRes.ok) {
+        throw new Error("Session fetch failed");
+      }
       const { user } = await sessionRes.json();
       
       state.currentUser = user;
@@ -264,8 +273,8 @@
       await enterApp();
       setToast("Signed in.", "success");
     } catch (error) {
-      console.error(error);
-      setAuthMessage("Connection error. Try again later.", true);
+      console.error("[LOGIN ERROR]", error);
+      setAuthMessage(`Connection failed: ${error.message || "Unknown error"}`, true);
     } finally {
       setBusy(els.loginButton, false);
     }
