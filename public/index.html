@@ -25,7 +25,6 @@
   <script defer src="./app.js"></script>
   <link rel="stylesheet" href="./mobile.css" media="(max-width: 768px)" />
   <script defer src="./mobile.js"></script>
-  <!-- Vercel Insights & Analytics -->
   <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="/_vercel/speed-insights/script.js"></script>
 </head>
@@ -53,11 +52,13 @@
       <form id="loginForm" class="login-form">
         <label>
           <span>Email or User ID</span>
-          <input id="identifierInput" name="identifier" type="text" autocomplete="username" required placeholder="Enter email or user ID" />
+          <input id="identifierInput" name="identifier" type="text" autocomplete="username" required
+            placeholder="Enter email or user ID" />
         </label>
         <label>
           <span>Password</span>
-          <input id="passwordInput" name="password" type="password" autocomplete="current-password" required placeholder="••••••••" />
+          <input id="passwordInput" name="password" type="password" autocomplete="current-password" required
+            placeholder="........" />
         </label>
         <button id="loginButton" class="primary-btn" type="submit">
           <i data-lucide="log-in" aria-hidden="true"></i>
@@ -89,10 +90,6 @@
         <a href="#home">Home</a>
         <a href="#rails">Discover</a>
         <a href="#my-list">My List</a>
-        <a href="dashboard.html" class="dashboard-link">
-            <i data-lucide="layout-dashboard" aria-hidden="true"></i>
-            Metrics
-        </a>
       </nav>
 
       <div class="search-cluster">
@@ -118,7 +115,6 @@
       </button>
     </header>
 
-    <!-- ... rest of the app shell (same as before) ... -->
     <nav class="mobile-dock glass-panel" aria-label="Mobile navigation">
       <a href="#home">
         <i data-lucide="home" aria-hidden="true"></i>
@@ -157,6 +153,9 @@
           <h2 id="heroTitle">Ready to stream</h2>
           <p id="heroDescription">Stream your favorite titles in a sleek cinematic experience.</p>
           <div class="hero-meta" id="heroMeta"></div>
+          <p id="heroSupportText" class="hero-support">
+            Discovery adapts to what you finish, save, revisit, and search for most.
+          </p>
           <div class="hero-actions">
             <button id="heroPlayButton" class="primary-btn" type="button">
               <i data-lucide="play" aria-hidden="true"></i>
@@ -166,24 +165,135 @@
               <i data-lucide="plus" aria-hidden="true"></i>
               My List
             </button>
+            <button id="heroResumeButton" class="ghost-btn hero-resume-btn" type="button" hidden>
+              <i data-lucide="history" aria-hidden="true"></i>
+              Resume
+            </button>
           </div>
+          <div id="heroMoodChips" class="hero-moods" aria-label="Mood suggestions"></div>
         </div>
+
+        <aside class="hero-sidecars">
+          <div class="hero-sidecar-shell">
+            <p class="eyebrow">Smart picks</p>
+            <div id="heroFeatureCards" class="hero-feature-cards"></div>
+          </div>
+        </aside>
       </div>
+    </section>
+
+    <section class="quick-actions glass-strip" aria-label="Device actions">
+      <div class="quick-actions-head">
+        <p class="eyebrow">Experience controls</p>
+        <h3>Adaptive, portable, and ready for the next session.</h3>
+      </div>
+      <div class="quick-actions-row">
+        <button id="notificationButton" class="ghost-btn" type="button">
+          <i data-lucide="bell" aria-hidden="true"></i>
+          Notifications
+        </button>
+        <button id="registerDeviceButton" class="ghost-btn" type="button">
+          <i data-lucide="shield-check" aria-hidden="true"></i>
+          Device passkey
+        </button>
+        <button id="refreshDataButton" class="ghost-btn" type="button">
+          <i data-lucide="refresh-cw" aria-hidden="true"></i>
+          Refresh library
+        </button>
+      </div>
+    </section>
+
+    <section id="curatedStrip" class="curated-strip" aria-label="Curated shortcuts"></section>
+
+    <section id="filterStrip" class="curated-strip" aria-label="Filters"></section>
+
+    <section class="intelligence-grid" id="assistant">
+      <article class="intelligence-card glass-panel">
+        <div class="intel-icon">
+          <img src="./assets/suggestions.png" alt="" />
+        </div>
+        <div class="intel-copy">
+          <p class="eyebrow">AI watch assistant</p>
+          <h3>Ask for a short night watch, a comfort rewatch, or something totally new.</h3>
+        </div>
+        <button class="secondary-btn assistant-launch" type="button" data-assistant-open="true">
+          <i data-lucide="bot" aria-hidden="true"></i>
+          Open assistant
+        </button>
+      </article>
+
+      <article class="intelligence-card glass-panel">
+        <div class="intel-icon intel-icon-watch">
+          <i data-lucide="users" aria-hidden="true"></i>
+        </div>
+        <div class="intel-copy">
+          <p class="eyebrow">Watch party</p>
+          <h3>Shared room UI with synced playback states and a live reaction rail.</h3>
+        </div>
+      </article>
+
+      <article class="intelligence-card glass-panel">
+        <div class="intel-icon intel-icon-offline">
+          <i data-lucide="download-cloud" aria-hidden="true"></i>
+        </div>
+        <div class="intel-copy">
+          <p class="eyebrow">Offline mode</p>
+          <h3>Clear download affordances, smart storage guidance, and better low-bandwidth cues.</h3>
+        </div>
+      </article>
     </section>
 
     <section id="rails" class="rails" aria-label="Video rails"></section>
     <section id="my-list" class="rails" aria-label="My list"></section>
   </div>
 
-  <div id="playerOverlay" class="player-overlay" role="dialog" aria-modal="true" aria-label="Video player" hidden>
+  <div id="assistantBackdrop" class="assistant-backdrop" hidden></div>
+  <aside id="assistantPanel" class="assistant-panel" hidden aria-labelledby="assistantTitle">
+    <div class="assistant-panel-head">
+      <div>
+        <p class="eyebrow">AI Watch Assistant</p>
+        <h2 id="assistantTitle">Less searching, better starts.</h2>
+      </div>
+      <button id="assistantCloseButton" class="icon-btn" type="button" aria-label="Close assistant">
+        <i data-lucide="x" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="assistant-profile glass-panel">
+      <img src="./assets/suggestions.png" alt="" />
+      <div>
+        <strong>VigilSiddhi Recommender</strong>
+        <p>Using your saves, resume history, and current catalog structure to surface better next actions.</p>
+      </div>
+    </div>
+
+    <div id="assistantSuggestionList" class="assistant-suggestion-list"></div>
+
+    <button id="assistantPrimaryAction" class="primary-btn" type="button">
+      <i data-lucide="wand-sparkles" aria-hidden="true"></i>
+      Surprise me
+    </button>
+  </aside>
+
+  <section id="playerOverlay" class="player-overlay" role="dialog" aria-modal="true" aria-label="Video player" hidden>
     <div class="player-shell">
       <div class="player-topbar">
-        <button id="closePlayerButton" class="icon-btn" type="button" aria-label="Close player">
+        <button id="closePlayerButton" class="icon-btn" type="button" aria-label="Close player" title="Close player">
           <i data-lucide="arrow-left" aria-hidden="true"></i>
         </button>
         <div class="player-heading">
           <p class="eyebrow">Now watching</p>
           <h2 id="playerTitle">Player</h2>
+          <p id="playerMeta"></p>
+        </div>
+        <div class="player-actions">
+          <button id="pipButton" class="icon-btn" type="button" aria-label="Picture in picture"
+            title="Picture in picture">
+            <i data-lucide="picture-in-picture" aria-hidden="true"></i>
+          </button>
+          <button id="fullscreenButton" class="icon-btn" type="button" aria-label="Fullscreen" title="Fullscreen">
+            <i data-lucide="maximize" aria-hidden="true"></i>
+          </button>
         </div>
       </div>
 
@@ -191,13 +301,33 @@
         <div id="videoContainer" class="video-container" data-shaka-player-container>
           <video id="videoElement" data-shaka-player playsinline crossorigin="anonymous"
             poster="./assets/logo.png"></video>
+          <div id="adContainer" class="ad-container"></div>
+          <div id="adOverlay" class="ad-overlay" hidden>
+            <span>Ad break</span>
+            <strong id="adCountdown">5</strong>
+          </div>
+          <div id="playerError" class="player-error" role="alert" hidden>
+            <i data-lucide="triangle-alert" aria-hidden="true"></i>
+            <span id="playerErrorMessage">This title is unavailable right now.</span>
+          </div>
         </div>
 
         <aside class="watch-panel glass-panel">
           <p class="eyebrow">Playback intelligence</p>
           <h3 id="watchTitle">Title</h3>
           <p id="watchDescription"></p>
+
+          <dl id="watchStats" class="watch-stats"></dl>
+
+          <div class="watch-section">
+            <p class="watch-section-title">Scene markers</p>
+            <div id="sceneMarkers" class="scene-markers"></div>
+          </div>
+
           <div class="up-next-card">
+            <p class="eyebrow">Up next</p>
+            <h4 id="upNextTitle">Recommended next title</h4>
+            <p id="upNextMeta">Another strong pick from the same lane.</p>
             <button id="upNextButton" class="secondary-btn" type="button">
               <i data-lucide="skip-forward" aria-hidden="true"></i>
               Play next
@@ -208,7 +338,10 @@
     </div>
   </section>
 
-  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+  <span id="playbackState" hidden></span>
+  <span id="protectionState" hidden></span>
+  <span id="adStatus" hidden></span>
+  <div id="toastStack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
 
   <script>
     if ("serviceWorker" in navigator) {

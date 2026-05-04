@@ -55,7 +55,7 @@
 
     // Auto-refresh library every 60 seconds to scan for new mpd_mapping additions
     setInterval(async () => {
-      if (state.currentUser && !state.playerOverlay.hidden === false) {
+      if (state.currentUser && els.playerOverlay?.hidden !== false) {
          console.log("[AUTO-REFRESH] Scanning for new videos...");
          await loadCatalog();
          state.keyStore = null; // Clear key cache to pick up new DRM keys for new videos
@@ -78,6 +78,7 @@
       "authMessage",
       "profileName",
       "logoutButton",
+      "mobileLogoutBtn",
       "searchInput",
       "voiceSearchButton",
       "searchSuggestionPanel",
@@ -142,49 +143,54 @@
     console.log("[DEBUG] UI Elements Bound:", Object.keys(els));
   }
 
+  function on(element, eventName, handler, options) {
+    element?.addEventListener(eventName, handler, options);
+  }
+
   function bindEvents() {
-    els.loginForm.addEventListener("submit", handleLogin);
-    els.logoutButton.addEventListener("click", logout);
-    els.searchInput.addEventListener("input", () => {
+    on(els.loginForm, "submit", handleLogin);
+    on(els.logoutButton, "click", logout);
+    on(els.mobileLogoutBtn, "click", logout);
+    on(els.searchInput, "input", () => {
       state.searchQuery = els.searchInput.value.trim().toLowerCase();
       renderSearchSuggestions();
       renderRails();
     });
-    els.searchInput.addEventListener("focus", renderSearchSuggestions);
-    els.voiceSearchButton?.addEventListener("click", () => {
+    on(els.searchInput, "focus", renderSearchSuggestions);
+    on(els.voiceSearchButton, "click", () => {
       setToast("Voice search UI is ready. Hook a speech service to enable it.");
     });
 
-    els.heroPlayButton.addEventListener("click", () => {
+    on(els.heroPlayButton, "click", () => {
       if (state.featuredVideo) {
         playVideo(state.featuredVideo);
       }
     });
 
-    els.heroListButton.addEventListener("click", () => {
+    on(els.heroListButton, "click", () => {
       if (state.featuredVideo) {
         toggleMyList(state.featuredVideo.id);
       }
     });
-    els.heroResumeButton?.addEventListener("click", () => {
+    on(els.heroResumeButton, "click", () => {
       if (state.featuredVideo) {
         playVideo(state.featuredVideo, { resume: true });
       }
     });
 
-    els.closePlayerButton.addEventListener("click", closePlayer);
-    els.notificationButton.addEventListener("click", requestNotifications);
-    els.registerDeviceButton.addEventListener("click", registerDeviceUnlock);
-    els.deviceUnlockButton.addEventListener("click", unlockWithDevice);
-    els.refreshDataButton.addEventListener("click", refreshData);
-    els.pipButton.addEventListener("click", togglePictureInPicture);
-    els.fullscreenButton.addEventListener("click", toggleFullscreen);
-    els.installButton.addEventListener("click", installPwa);
-    els.assistantButton?.addEventListener("click", () => setAssistantOpen(true));
-    els.assistantBackdrop?.addEventListener("click", () => setAssistantOpen(false));
-    els.assistantCloseButton?.addEventListener("click", () => setAssistantOpen(false));
-    els.assistantPrimaryAction?.addEventListener("click", handleAssistantPrimaryAction);
-    els.upNextButton?.addEventListener("click", () => {
+    on(els.closePlayerButton, "click", closePlayer);
+    on(els.notificationButton, "click", requestNotifications);
+    on(els.registerDeviceButton, "click", registerDeviceUnlock);
+    on(els.deviceUnlockButton, "click", unlockWithDevice);
+    on(els.refreshDataButton, "click", refreshData);
+    on(els.pipButton, "click", togglePictureInPicture);
+    on(els.fullscreenButton, "click", toggleFullscreen);
+    on(els.installButton, "click", installPwa);
+    on(els.assistantButton, "click", () => setAssistantOpen(true));
+    on(els.assistantBackdrop, "click", () => setAssistantOpen(false));
+    on(els.assistantCloseButton, "click", () => setAssistantOpen(false));
+    on(els.assistantPrimaryAction, "click", handleAssistantPrimaryAction);
+    on(els.upNextButton, "click", () => {
       const nextId = els.upNextButton.dataset.videoId;
       const nextVideo = nextId ? state.catalogById.get(nextId) : getSuggestedNextVideo(state.currentVideo);
       if (nextVideo) {
@@ -202,7 +208,9 @@
     window.addEventListener("beforeinstallprompt", (event) => {
       event.preventDefault();
       state.installPrompt = event;
-      els.installButton.hidden = false;
+      if (els.installButton) {
+        els.installButton.hidden = false;
+      }
     });
     window.addEventListener("scroll", updateShellChrome, { passive: true });
 
@@ -317,15 +325,16 @@
       if (!response.ok) throw new Error("Catalog fetch failed");
       
       const videos = await response.json();
+      const normalizedVideos = videos.map(normalizeVideo);
       const byId = new Map();
       
-      for (const video of videos) {
-        byId.set(video.slug, normalizeVideo(video));
+      for (const video of normalizedVideos) {
+        byId.set(video.id, video);
       }
 
-      state.catalog = videos;
+      state.catalog = normalizedVideos;
       state.catalogById = byId;
-      state.featuredVideo = byId.get(config.featuredVideoId) || state.catalog[0] || null;
+      state.featuredVideo = byId.get(config.featuredVideoId) || normalizedVideos[0] || null;
       
       console.log(`[CATALOG] Loaded ${state.catalog.length} titles from Vercel API.`);
     } catch (error) {
@@ -335,14 +344,23 @@
   }
 
   function normalizeVideo(video) {
+    const primaryStream = video.video_streams?.find((stream) => stream.is_primary) || video.video_streams?.[0];
+    const stableId = video.slug || video.id;
     return {
       ...video,
-      // API already sets id=slug; keep it consistent
-      id: video.slug || video.id,
-      // Prefer server-provided mpdUrl, fall back to CDN pattern
-      mpdUrl: video.mpdUrl || video.video_streams?.[0]?.manifest_url || `${(config.cdnBaseUrl || '').replace(/\/$/, '')}/${video.slug}/manifest.mpd`,
-      // Prefer server-provided thumbnail, fall back to CDN pattern
-      thumbnail: video.thumbnail || `${(config.cdnBaseUrl || '').replace(/\/$/, '')}/${video.slug}/thumbnail.jpeg`,
+      id: stableId,
+      slug: stableId,
+      mpdUrl:
+        video.mpdUrl ||
+        video.manifest_url ||
+        primaryStream?.manifest_url ||
+        `${(config.cdnBaseUrl || "").replace(/\/$/, "")}/${stableId}/manifest.mpd`,
+      thumbnail:
+        video.thumbnail ||
+        video.thumbnail_url ||
+        primaryStream?.thumbnail_url ||
+        `${(config.cdnBaseUrl || "").replace(/\/$/, "")}/${stableId}/thumbnail.jpeg`,
+      description: video.description || video.summary || "",
       adCuePoints: video.adCuePoints || config.adCuePoints || [],
       playable: true
     };
@@ -415,23 +433,27 @@
       return;
     }
 
-    els.heroCategory.textContent = video.category || "Featured";
-    els.heroTitle.textContent = video.title;
-    els.heroDescription.textContent = video.description;
-    els.heroStatusPill.textContent = buildHeroStatus(video);
-    els.heroSupportText.textContent = buildHeroSupportCopy(video);
-    els.heroMeta.innerHTML = "";
+    if (els.heroCategory) els.heroCategory.textContent = video.category || "Featured";
+    if (els.heroTitle) els.heroTitle.textContent = video.title || "Ready to stream";
+    if (els.heroDescription) els.heroDescription.textContent = video.description || "Stream your next title.";
+    if (els.heroStatusPill) els.heroStatusPill.textContent = buildHeroStatus(video);
+    if (els.heroSupportText) els.heroSupportText.textContent = buildHeroSupportCopy(video);
+    if (els.heroMeta) {
+      els.heroMeta.innerHTML = "";
 
-    for (const value of [video.year, video.duration, video.maturity]) {
-      if (!value) {
-        continue;
+      for (const value of [video.year, video.duration, video.maturity]) {
+        if (!value) {
+          continue;
+        }
+        const span = document.createElement("span");
+        span.textContent = value;
+        els.heroMeta.appendChild(span);
       }
-      const span = document.createElement("span");
-      span.textContent = value;
-      els.heroMeta.appendChild(span);
     }
 
-    setSmartImage(els.heroImage, thumbnailCandidates(video));
+    if (els.heroImage) {
+      setSmartImage(els.heroImage, thumbnailCandidates(video));
+    }
     renderHeroFeatureCards(video);
     renderMoodChips(video);
     updateHeroResumeButton(video);
@@ -683,21 +705,28 @@
   }
 
   async function playVideo(video, options = {}) {
+    if (!video || !els.videoElement) {
+      setToast("This title is missing playback data.", "error");
+      return;
+    }
+
     state.currentVideo = video;
     
-    if (state.useDetachedMode && document.pictureInPictureElement === els.videoElement) {
-      els.playerOverlay.hidden = true;
-    } else {
-      els.playerOverlay.hidden = false;
+    if (els.playerOverlay) {
+      if (state.useDetachedMode && document.pictureInPictureElement === els.videoElement) {
+        els.playerOverlay.hidden = true;
+      } else {
+        els.playerOverlay.hidden = false;
+      }
     }
-    els.playerError.hidden = true;
-    els.playerTitle.textContent = video.title;
-    els.playerMeta.textContent = [video.year, video.duration, video.category].filter(Boolean).join("  ");
-    els.watchTitle.textContent = video.title;
-    els.watchDescription.textContent = video.description;
-    els.playbackState.textContent = "";
-    els.protectionState.textContent = "";
-    els.adStatus.textContent = "Waiting";
+    if (els.playerError) els.playerError.hidden = true;
+    if (els.playerTitle) els.playerTitle.textContent = video.title || "Player";
+    if (els.playerMeta) els.playerMeta.textContent = [video.year, video.duration, video.category].filter(Boolean).join("  ");
+    if (els.watchTitle) els.watchTitle.textContent = video.title || "Title";
+    if (els.watchDescription) els.watchDescription.textContent = video.description || "";
+    if (els.playbackState) els.playbackState.textContent = "";
+    if (els.protectionState) els.protectionState.textContent = "";
+    if (els.adStatus) els.adStatus.textContent = "Waiting";
     els.videoElement.poster = firstThumbnail(video);
     state.firedAds = new Set();
     state.adCuePoints = (video.adCuePoints || config.adCuePoints || []).map(Number).filter(Number.isFinite);
@@ -734,13 +763,13 @@
             }
           }
         });
-        els.protectionState.textContent = "DRM: ClearKey (AES-CENC)";
-        els.playbackState.textContent = "Ready";
+        if (els.protectionState) els.protectionState.textContent = "DRM: ClearKey (AES-CENC)";
+        if (els.playbackState) els.playbackState.textContent = "Ready";
       } else {
         console.log(`[DRM] No key found for ${video.id}, proceeding without DRM`);
         state.player.configure({ drm: { clearKeys: {} } });
-        els.protectionState.textContent = "DRM: None (Clear)";
-        els.playbackState.textContent = "Ready";
+        if (els.protectionState) els.protectionState.textContent = "DRM: None (Clear)";
+        if (els.playbackState) els.playbackState.textContent = "Ready";
       }
 
       const loadedUrl = await loadManifestWithFallback(video);
@@ -765,6 +794,9 @@
   async function ensureShaka() {
     if (!window.shaka) {
       throw new Error("Shaka Player script is not loaded.");
+    }
+    if (!els.videoElement || !els.videoContainer) {
+      throw new Error("Player UI is incomplete.");
     }
 
     if (!state.shakaReady) {
@@ -856,7 +888,7 @@
         }
       });
       els.videoElement.addEventListener("ended", () => {
-        els.adStatus.textContent = "Complete";
+        if (els.adStatus) els.adStatus.textContent = "Complete";
         clearPlaybackProgress(state.currentVideo?.id);
         updateHeroResumeButton(state.featuredVideo);
         if (window.OTT_OBS) window.OTT_OBS.onVideoEnd();
@@ -907,7 +939,7 @@
     
     // Fallback to slug-based folder on CDN
     if (config.cdnBaseUrl) {
-      urls.push(`${trimSlash(config.cdnBaseUrl)}/${encodeURIComponent(video.slug)}/manifest.mpd`);
+      urls.push(`${trimSlash(config.cdnBaseUrl)}/${encodeURIComponent(video.slug || video.id)}/manifest.mpd`);
     }
     
     return mergeUnique(urls);
@@ -1021,7 +1053,7 @@
 
   function onTimelineRegionAdded(event) {
     if (isScteRegion(event.detail)) {
-      els.adStatus.textContent = "Ad break";
+      if (els.adStatus) els.adStatus.textContent = "Ad break";
     }
   }
 
@@ -1074,7 +1106,7 @@
     els.videoElement.addEventListener("leavepictureinpicture", () => {
       state.useDetachedMode = false;
       if (state.currentVideo) {
-        els.playerOverlay.hidden = false;
+        if (els.playerOverlay) els.playerOverlay.hidden = false;
       }
     });
 
@@ -1090,7 +1122,7 @@
       google.ima.AdErrorEvent.Type.AD_ERROR,
       (event) => {
         console.warn("IMA error", event.getError());
-        showDemoAdBreak("ad error fallback");
+        showAdBreak("ad error fallback");
       },
       false
     );
@@ -1098,7 +1130,7 @@
   }
 
   function requestAdBreak(reason) {
-    els.adStatus.textContent = "Ad break";
+    if (els.adStatus) els.adStatus.textContent = "Ad break";
 
     if (!config.googleImaAdTag || !window.google || !google.ima || !state.adsLoader) {
       showAdBreak(reason);
@@ -1130,7 +1162,7 @@
       els.videoElement.play().catch(() => undefined);
     });
     state.adsManager.addEventListener(google.ima.AdEvent.Type.COMPLETE, () => {
-      els.adStatus.textContent = "Ad complete";
+      if (els.adStatus) els.adStatus.textContent = "Ad complete";
     });
     state.adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, () => {
       state.adPlaying = false;
@@ -1150,36 +1182,38 @@
 
     state.adPlaying = true;
     els.videoElement.pause();
-    els.adOverlay.hidden = false;
-    els.adStatus.textContent = "Ad break";
+    if (els.adOverlay) els.adOverlay.hidden = false;
+    if (els.adStatus) els.adStatus.textContent = "Ad break";
 
     let seconds = 5;
-    els.adCountdown.textContent = String(seconds);
+    if (els.adCountdown) els.adCountdown.textContent = String(seconds);
     clearInterval(state.adTimer);
     state.adTimer = setInterval(() => {
       seconds -= 1;
-      els.adCountdown.textContent = String(Math.max(0, seconds));
+      if (els.adCountdown) els.adCountdown.textContent = String(Math.max(0, seconds));
       if (seconds <= 0) {
         clearInterval(state.adTimer);
         state.adPlaying = false;
-        els.adOverlay.hidden = true;
-        els.adStatus.textContent = "Ad complete";
+        if (els.adOverlay) els.adOverlay.hidden = true;
+        if (els.adStatus) els.adStatus.textContent = "Ad complete";
         els.videoElement.play().catch(() => undefined);
       }
     }, 1000);
   }
 
   function showPlayerError(detail = "") {
-    els.playerError.hidden = false;
-    const errorMsg = document.getElementById("playerErrorMessage");
+    if (els.playerError) {
+      els.playerError.hidden = false;
+    }
+    const errorMsg = document.getElementById("playerErrorMessage") || els.playerError?.querySelector("span");
     if (errorMsg) {
       errorMsg.textContent = detail || "This title is unavailable right now.";
     }
   }
 
   async function closePlayer() {
-    els.playerOverlay.hidden = true;
-    els.playerError.hidden = true;
+    if (els.playerOverlay) els.playerOverlay.hidden = true;
+    if (els.playerError) els.playerError.hidden = true;
     
     if (document.pictureInPictureElement === els.videoElement) {
       state.useDetachedMode = true;
@@ -1188,7 +1222,7 @@
 
     clearInterval(state.adTimer);
     state.adPlaying = false;
-    els.adOverlay.hidden = true;
+    if (els.adOverlay) els.adOverlay.hidden = true;
     savePlaybackProgress(true);
 
     // ── Observability: flush session on close ───────────────
@@ -2255,6 +2289,10 @@
   }
 
   function setToast(message, type = "") {
+    if (!els.toastStack) {
+      console.log(`[TOAST${type ? `:${type}` : ""}] ${message}`);
+      return;
+    }
     const toast = document.createElement("div");
     toast.className = `toast ${type}`.trim();
     toast.textContent = message;

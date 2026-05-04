@@ -21,6 +21,6 @@ window.OTT_CONFIG = {
   thumbnailFileNames: ["thumbnail.webp", "thumbnail.jpg", "thumbnail.jpeg", "thumbnail.png"],
   
   // These are now handled server-side but kept here for UI default state if needed
-  featuredVideoId: "angel_one",
+  featuredVideoId: "sunflower_field",
   adCuePoints: [30, 90]
 };
