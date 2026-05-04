@@ -5,5 +5,11 @@
       "path": "/api/cron/cdn-metrics",
       "schedule": "0 0 * * *"
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/dashboard",
+      "destination": "/dashboard.html"
+    }
   ]
 }
