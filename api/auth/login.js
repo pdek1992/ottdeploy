@@ -1,5 +1,6 @@
 import { supabase } from '../../src/lib/supabase.js';
-import bcrypt from 'bcryptjs';
+import bcryptPkg from 'bcryptjs';
+const { compare } = bcryptPkg;
 import cookie from 'cookie';
 import crypto from 'crypto';
 
@@ -39,7 +40,7 @@ export default async function handler(req, res) {
         .single();
 
       if (credentials) {
-        isValid = await bcrypt.compare(password, credentials.password_hash);
+        isValid = await compare(password, credentials.password_hash);
       } else {
         // 4. Default Password Logic
         // If it's a legacy_user_id login, password = legacy_user_id

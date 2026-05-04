@@ -37,6 +37,7 @@ export default async function handler(req, res) {
       ? promUrl.replace("/api/prom/push", "/influx/api/v1/push/influx/write")
       : promUrl;
 
+    console.log(`[DEBUG] Metrics Write URL: ${writeUrl}`);
     const auth = Buffer.from(`${user}:${key}`).toString("base64");
     
     // Example transformation of client metrics to line protocol
@@ -100,8 +101,12 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const text = await response.text();
-      console.error(`Grafana push failed: ${text}`);
-      return res.status(502).json({ error: 'Failed to forward metrics' });
+      console.error(`[METRICS ERROR] Grafana push failed (${response.status}): ${text}`);
+      return res.status(502).json({ 
+        error: 'Failed to forward metrics', 
+        targetStatus: response.status,
+        targetResponse: text 
+      });
     }
 
     return res.status(200).json({ success: true });
