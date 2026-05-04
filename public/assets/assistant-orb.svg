@@ -1,0 +1,20 @@
+<svg width="320" height="320" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="orbBg" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(160 160) rotate(90) scale(132)">
+      <stop stop-color="#1B2B3F"/>
+      <stop offset="1" stop-color="#0B1017"/>
+    </radialGradient>
+    <linearGradient id="orbLine" x1="42" y1="56" x2="278" y2="266" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3CE6DC"/>
+      <stop offset="0.5" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#FF8A3D"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="320" rx="96" fill="url(#orbBg)"/>
+  <circle cx="160" cy="160" r="100" stroke="url(#orbLine)" stroke-width="2.2" stroke-opacity="0.7"/>
+  <circle cx="160" cy="160" r="74" stroke="url(#orbLine)" stroke-width="1.2" stroke-opacity="0.4" stroke-dasharray="10 14"/>
+  <path d="M160 92C142 116 130 142 130 166C130 200 153 227 160 232C167 227 190 200 190 166C190 142 178 116 160 92Z" fill="#8B5CF6"/>
+  <path d="M110 154C84 172 68 194 68 220C68 248 90 270 116 282C112 234 112 196 110 154Z" fill="#3CE6DC" fill-opacity="0.92"/>
+  <path d="M210 154C236 172 252 194 252 220C252 248 230 270 204 282C208 234 208 196 210 154Z" fill="#FF8A3D" fill-opacity="0.92"/>
+  <circle cx="160" cy="160" r="124" stroke="white" stroke-opacity="0.06"/>
+</svg>

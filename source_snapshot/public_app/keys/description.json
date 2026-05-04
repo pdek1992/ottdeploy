@@ -1,0 +1,203 @@
+{
+  "free": {
+    "title": "Free Preview",
+    "description": "Start watching instantly with a smooth premium playback experience.",
+    "category": "Featured",
+    "year": "2026",
+    "duration": "2m"
+  },
+  "output_02_04": {
+    "title": "Weekend Special",
+    "description": "A featured pick ready for streaming.",
+    "category": "Featured",
+    "year": "2026",
+    "duration": "Preview"
+  },
+  "output_2min": {
+    "title": "Quick Preview",
+    "description": "A short title for a fast watch.",
+    "category": "Featured",
+    "year": "2026",
+    "duration": "2m"
+  },
+  "asiacup": {
+    "title": "Asia Cup Finals",
+    "description": "India vs Pakistan action from a packed cricket stadium.",
+    "category": "Sports",
+    "year": "2026",
+    "duration": "2h 15m",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/8/89/Test_Match_Cricket_India_Vs._Pakistan.jpg"
+  },
+  "blackmail": {
+    "title": "Blackmail",
+    "description": "Starring Irrfan Khan, Kirti Kulhari, Divya Dutta, Arunoday Singh and Omi Vaidya .",
+    "category": "Comedy",
+    "year": "2018",
+    "duration": "1h 54m"
+  },
+  "tmkoc": {
+    "title": "Taarak Mehta Ka Ooltah Chashmah",
+    "description": "A light-hearted sitcom set in the Gokuldham Society, where a group of friends from different backgrounds navigate daily life with humor and wit.",
+    "category": "Comedy",
+    "year": "2008",
+    "duration": "22m",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Cast-of-Taarak-Mehta-Ka-Ooltah-Chashmah-celebrate-the-12-year-anniversary-of-the-show.jpg"
+  },
+  "withlogo": {
+    "title": "Studio Preview",
+    "description": "A polished sample from the OTT collection.",
+    "category": "Featured",
+    "year": "2026",
+    "duration": "Preview"
+  },
+  "dash_if_livesim": {
+    "title": "DASH-IF LiveSim",
+    "description": "Reference high-frequency chunked DASH live stream for low-latency testing.",
+    "category": "Reference",
+    "year": "2024",
+    "duration": "LIVE",
+    "thumbnail": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=640&q=80"
+  },
+  "qualcomm_multirate": {
+    "title": "Qualcomm MultiRate",
+    "description": "Multi-rate patched reference DASH stream for ABR verification.",
+    "category": "Reference",
+    "year": "2023",
+    "duration": "Feature",
+    "thumbnail": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=640&q=80"
+  },
+  "qualcomm_hd": {
+    "title": "Qualcomm HD",
+    "description": "High-definition multi-resolution reference content.",
+    "category": "Reference",
+    "year": "2023",
+    "duration": "HD",
+    "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=640&q=80"
+  },
+  "bitmovin_sample": {
+    "title": "Bitmovin Gold",
+    "description": "The industry benchmark for premium ABR streaming performance.",
+    "category": "Reference",
+    "year": "2023",
+    "duration": "Reference",
+    "thumbnail": "https://images.unsplash.com/photo-1607799279861-4dd421887fb3?w=640&q=80"
+  },
+  "bbb_itec": {
+    "title": "Big Buck Bunny (ITEC)",
+    "description": "ITEC high-fidelity dataset for adaptive streaming experiments.",
+    "category": "Animation",
+    "year": "2014",
+    "duration": "10m",
+    "thumbnail": "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=640&q=80"
+  },
+  "countryside_meadow": {
+    "title": "Countryside Meadow",
+    "description": "Breathtaking aerial view of a lush green meadow bathed in sunlight.",
+    "category": "Nature",
+    "language": "en",
+    "genre": "Nature",
+    "year": "2026",
+    "duration": "Preview",
+    "thumbnail": "https://ott.prashantkadam.in/countryside_meadow/thumbnail.png"
+  },
+  "forest_waterfall": {
+    "title": "Forest Waterfall",
+    "description": "A hidden waterfall cascading through a dense green forest.",
+    "category": "Nature",
+    "language": "en",
+    "genre": "Nature",
+    "year": "2026",
+    "duration": "Preview",
+    "thumbnail": "https://ott.prashantkadam.in/forest_waterfall/thumbnail.png"
+  },
+  "mountain_highway": {
+    "title": "Mountain Highway",
+    "description": "Cruise down a winding mountain highway through dramatic peaks.",
+    "category": "Travel",
+    "language": "en",
+    "genre": "Travel",
+    "year": "2026",
+    "duration": "Preview",
+    "thumbnail": "https://ott.prashantkadam.in/mountain_highway/thumbnail.png"
+  },
+  "pexels_cityscape": {
+    "title": "Cityscape Aerial",
+    "description": "Sweeping aerial footage over a modern cityscape at golden hour.",
+    "category": "Cinematic",
+    "language": "en",
+    "genre": "Cinematic",
+    "year": "2026",
+    "duration": "Preview",
+    "thumbnail": "https://ott.prashantkadam.in/pexels_cityscape/thumbnail.png"
+  },
+  "pink_flowers": {
+    "title": "Pink Flowers",
+    "description": "Delicate pink blossoms captured in stunning close-up detail.",
+    "category": "Nature",
+    "language": "en",
+    "genre": "Nature",
+    "year": "2026",
+    "duration": "Preview",
+    "thumbnail": "https://ott.prashantkadam.in/pink_flowers/thumbnail.png"
+  },
+  "relaxing_creek": {
+    "title": "Relaxing Creek",
+    "description": "Fly over a serene rocky creek winding through untouched nature.",
+    "category": "Nature",
+    "language": "en",
+    "genre": "Nature",
+    "year": "2026",
+    "duration": "Preview",
+    "thumbnail": "https://ott.prashantkadam.in/relaxing_creek/thumbnail.png"
+  },
+  "river_raft": {
+    "title": "River Raft Journey",
+    "description": "A peaceful raft drifting gently down a calm sunlit river.",
+    "category": "Adventure",
+    "language": "en",
+    "genre": "Adventure",
+    "year": "2026",
+    "duration": "Preview",
+    "thumbnail": "https://ott.prashantkadam.in/river_raft/thumbnail.png"
+  },
+  "sea_sunset": {
+    "title": "Sea Sunset",
+    "description": "A breathtaking sunset painting the ocean in golden hues.",
+    "category": "Nature",
+    "language": "en",
+    "genre": "Nature",
+    "year": "2026",
+    "duration": "Preview",
+    "thumbnail": "https://ott.prashantkadam.in/sea_sunset/thumbnail.png"
+  },
+  "stars_in_space": {
+    "title": "Stars in Space",
+    "description": "A mesmerizing journey drifting through the stars and cosmos.",
+    "category": "Sci-Fi",
+    "language": "en",
+    "genre": "Sci-Fi",
+    "year": "2026",
+    "duration": "Preview",
+    "thumbnail": "https://ott.prashantkadam.in/stars_in_space/thumbnail.png"
+  },
+  "sunflower_field": {
+    "title": "Sunflower Field",
+    "description": "A vast golden field of sunflowers swaying in the warm breeze.",
+    "category": "Nature",
+    "language": "en",
+    "genre": "Nature",
+    "year": "2026",
+    "duration": "Preview",
+    "thumbnail": "https://ott.prashantkadam.in/sunflower_field/thumbnail.png"
+  },
+  "white_sand_beach": {
+    "title": "White Sand Beach",
+    "description": "Pristine white sand beach lapped by crystal-clear turquoise waves.",
+    "category": "Travel",
+    "language": "en",
+    "genre": "Travel",
+    "year": "2026",
+    "duration": "Preview",
+    "thumbnail": "https://ott.prashantkadam.in/white_sand_beach/thumbnail.png"
+  }
+}

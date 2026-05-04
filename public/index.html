@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#06080d" />
+  <meta name="description" content="A cinematic streaming app experience." />
+  <title>VigilSiddhi OTT</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./assets/logo.png" />
+  <link rel="apple-touch-icon" href="./assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/controls.css" />
+  <link rel="stylesheet" href="./styles.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/shaka-player.ui.min.js"></script>
+  <script defer src="https://imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
+  <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="./config.js"></script>
+  <script defer src="./observability.js"></script>
+  <script defer src="./app.js"></script>
+  <link rel="stylesheet" href="./mobile.css" media="(max-width: 768px)" />
+  <script defer src="./mobile.js"></script>
+</head>
+
+<body>
+  <div class="cinema-backdrop" aria-hidden="true"></div>
+  <div class="ambient-orb ambient-orb-one" aria-hidden="true"></div>
+  <div class="ambient-orb ambient-orb-two" aria-hidden="true"></div>
+
+  <main id="authScreen" class="auth-screen">
+    <section class="auth-showcase glass-panel" aria-label="Streaming preview">
+      <div class="auth-stat-grid">
+        <article class="auth-stat-card"></article>
+        <article class="auth-stat-card"></article>
+        <article class="auth-stat-card"></article>
+      </div>
+      <img class="auth-showcase-art" src="./assets/hero-orbit.jpg" alt="" />
+    </section>
+
+    <section class="login-panel glass-panel" aria-labelledby="loginTitle">
+      <img class="login-logo" src="./assets/logo.png" alt="OTT logo" />
+      <p class="eyebrow">Premium Streaming</p>
+      <h2 id="loginTitle">VigilSiddhi OTT</h2>
+      <p class="login-copy">Sign in to unlock personalized content and seamless playback.</p>
+      <form id="loginForm" class="login-form">
+        <label>
+          <span>Email</span>
+          <input id="emailInput" name="email" type="email" autocomplete="email" required />
+        </label>
+        <label>
+          <span>User ID</span>
+          <input id="userIdInput" name="userId" type="text" autocomplete="username" required />
+        </label>
+        <button id="loginButton" class="primary-btn" type="submit">
+          <i data-lucide="log-in" aria-hidden="true"></i>
+          Sign in
+        </button>
+      </form>
+      <div class="auth-actions">
+        <button id="deviceUnlockButton" class="ghost-btn" type="button">
+          <i data-lucide="fingerprint" aria-hidden="true"></i>
+          Device unlock
+        </button>
+        <button id="installButton" class="ghost-btn" type="button" hidden>
+          <i data-lucide="download" aria-hidden="true"></i>
+          Install app
+        </button>
+      </div>
+      <p id="authMessage" class="status-text" role="status"></p>
+    </section>
+  </main>
+
+  <div id="appShell" class="app-shell" hidden>
+    <header id="topbar" class="topbar glass-strip">
+      <a class="brand" href="#home" aria-label="VigilSiddhi OTT home">
+        <img src="./assets/logo.png" alt="" />
+        <span>VigilSiddhi OTT</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#home">Home</a>
+        <a href="#rails">Discover</a>
+        <a href="#my-list">My List</a>
+        <a href="dashboard.html" class="dashboard-link">
+            <i data-lucide="layout-dashboard" aria-hidden="true"></i>
+            Metrics
+        </a>
+      </nav>
+
+      <div class="search-cluster">
+        <label class="search-box" aria-label="Search titles">
+          <i data-lucide="search" aria-hidden="true"></i>
+          <input id="searchInput" type="search" placeholder="Search titles, genres, moods" />
+          <button id="voiceSearchButton" class="voice-search-btn" type="button" aria-label="Voice search">
+            <i data-lucide="mic" aria-hidden="true"></i>
+          </button>
+        </label>
+        <div id="searchSuggestionPanel" class="search-suggestion-panel" hidden></div>
+      </div>
+
+      <div class="profile-chip">
+        <span class="profile-avatar">
+          <img src="./assets/profile-placeholder.svg" alt="" />
+        </span>
+        <span id="profileName">Guest</span>
+      </div>
+
+      <button id="logoutButton" class="icon-btn" type="button" aria-label="Log out" title="Log out">
+        <i data-lucide="log-out" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <!-- ... rest of the app shell (same as before) ... -->
+    <nav class="mobile-dock glass-panel" aria-label="Mobile navigation">
+      <a href="#home">
+        <i data-lucide="home" aria-hidden="true"></i>
+        <span>Home</span>
+      </a>
+      <a href="#rails">
+        <i data-lucide="compass" aria-hidden="true"></i>
+        <span>Discover</span>
+      </a>
+      <button id="assistantButton" type="button">
+        <i data-lucide="bot" aria-hidden="true"></i>
+        <span>AI</span>
+      </button>
+      <a href="#my-list">
+        <i data-lucide="bookmark" aria-hidden="true"></i>
+        <span>List</span>
+      </a>
+      <button type="button" id="mobileLogoutBtn">
+        <i data-lucide="log-out" aria-hidden="true"></i>
+        <span>Logout</span>
+      </button>
+    </nav>
+
+    <section id="home" class="hero">
+      <div class="hero-media">
+        <img id="heroImage" src="./assets/logo.png" alt="" />
+      </div>
+      <div class="hero-sheen"></div>
+
+      <div class="hero-layout">
+        <div class="hero-content">
+          <div class="hero-topline">
+            <p id="heroCategory" class="eyebrow">Featured</p>
+            <span id="heroStatusPill" class="status-pill">Personalized</span>
+          </div>
+          <h2 id="heroTitle">Ready to stream</h2>
+          <p id="heroDescription">Stream your favorite titles in a sleek cinematic experience.</p>
+          <div class="hero-meta" id="heroMeta"></div>
+          <div class="hero-actions">
+            <button id="heroPlayButton" class="primary-btn" type="button">
+              <i data-lucide="play" aria-hidden="true"></i>
+              Play now
+            </button>
+            <button id="heroListButton" class="secondary-btn" type="button">
+              <i data-lucide="plus" aria-hidden="true"></i>
+              My List
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="rails" class="rails" aria-label="Video rails"></section>
+    <section id="my-list" class="rails" aria-label="My list"></section>
+  </div>
+
+  <div id="playerOverlay" class="player-overlay" role="dialog" aria-modal="true" aria-label="Video player" hidden>
+    <div class="player-shell">
+      <div class="player-topbar">
+        <button id="closePlayerButton" class="icon-btn" type="button" aria-label="Close player">
+          <i data-lucide="arrow-left" aria-hidden="true"></i>
+        </button>
+        <div class="player-heading">
+          <p class="eyebrow">Now watching</p>
+          <h2 id="playerTitle">Player</h2>
+        </div>
+      </div>
+
+      <div class="player-grid">
+        <div id="videoContainer" class="video-container" data-shaka-player-container>
+          <video id="videoElement" data-shaka-player playsinline crossorigin="anonymous"
+            poster="./assets/logo.png"></video>
+        </div>
+
+        <aside class="watch-panel glass-panel">
+          <p class="eyebrow">Playback intelligence</p>
+          <h3 id="watchTitle">Title</h3>
+          <p id="watchDescription"></p>
+          <div class="up-next-card">
+            <button id="upNextButton" class="secondary-btn" type="button">
+              <i data-lucide="skip-forward" aria-hidden="true"></i>
+              Play next
+            </button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(console.warn);
+      });
+    }
+  </script>
+</body>
+
+</html>

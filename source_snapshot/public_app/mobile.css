@@ -1,0 +1,276 @@
+/**
+ * VigilSiddhi OTT - Mobile Stylesheet
+ * Scoped to .mobile-view to prevent desktop regression.
+ */
+
+/* ── Global Mobile Resets ────────────────────── */
+.mobile-view {
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .mobile-view .app-shell {
+    padding-bottom: 70px; /* Space for bottom dock */
+  }
+
+  .mobile-view .auth-screen {
+    display: flex;
+    flex-direction: row;
+    padding: 16px;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .mobile-view .auth-showcase,
+  .mobile-view .login-panel {
+    flex: 1;
+    min-height: auto;
+  }
+
+  .mobile-view .topbar {
+    padding: 10px 15px;
+    justify-content: space-between;
+  }
+
+  .mobile-view .nav-links,
+  .mobile-view .search-cluster,
+  .mobile-view .profile-chip {
+    display: none !important; /* Hide desktop nav clutter */
+  }
+
+  /* ── Navigation (Bottom Dock) ──────────────── */
+  .mobile-view .mobile-dock {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 65px;
+    background: rgba(10, 14, 20, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    z-index: 1000;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 10px;
+  }
+
+  .mobile-view .mobile-dock a,
+  .mobile-view .mobile-dock button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--muted, #8a8d91);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 600;
+    gap: 4px;
+    background: none;
+    border: none;
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .mobile-view .mobile-dock a.active,
+  .mobile-view .mobile-dock a:focus {
+    color: var(--accent, #27d7ff);
+  }
+
+  /* ── Hero Section ────────────────────────── */
+  .mobile-view .hero {
+    height: 70vh;
+    min-height: 500px;
+  }
+
+  .mobile-view .hero-layout {
+    flex-direction: column;
+    padding: 0 20px 40px;
+    justify-content: flex-end;
+  }
+
+  .mobile-view .hero-content {
+    width: 100%;
+    text-align: center;
+  }
+
+  .mobile-view .hero-sidecars,
+  .mobile-view .hero-support,
+  .mobile-view .hero-moods {
+    display: none !important;
+  }
+
+  .mobile-view .hero-actions {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .mobile-view .hero-actions button {
+    flex: 1;
+    max-width: 160px;
+  }
+
+  /* ── Content Rails ───────────────────────── */
+  .mobile-view .rails {
+    padding: 20px 0;
+  }
+
+  .mobile-view .rail-track {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    gap: 12px;
+    padding: 0 15px 15px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-view .tile {
+    flex: 0 0 160px !important;
+    scroll-snap-align: start;
+    width: 160px !important;
+  }
+
+  .mobile-view .video-card {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Hide metadata on cards for mobile */
+  .mobile-view .tile-description,
+  .mobile-view .tile-meta,
+  .mobile-view .tile-badges,
+  .mobile-view .tile-actions button:not(.tile-action-play) {
+    display: none !important;
+  }
+
+  .mobile-view .tile-body {
+    display: flex !important;
+    opacity: 1 !important;
+    transform: none !important;
+    padding: 8px !important;
+  }
+
+  .mobile-view .tile-action-play {
+    display: flex !important;
+  }
+
+  /* Clutter reduction */
+  .mobile-view #heroDescription,
+  .mobile-view #heroMeta,
+  .mobile-view .hero-support,
+  .mobile-view .hero-moods,
+  .mobile-view .hero-sidecars,
+  .mobile-view .quick-actions,
+  .mobile-view .curated-strip,
+  .mobile-view .intelligence-grid {
+    display: none !important;
+  }
+
+  .mobile-view .player-overlay {
+    padding: 0;
+  }
+
+  .mobile-view .player-shell {
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .mobile-view .player-grid {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .mobile-view .video-container {
+    width: 100% !important;
+    aspect-ratio: 16 / 9;
+    height: auto !important;
+  }
+
+  .mobile-view .watch-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .mobile-view .player-topbar {
+    padding: 15px;
+  }
+
+  .mobile-view .player-actions {
+    gap: 10px;
+  }
+
+  /* ── KPI & Dashboard (for dashboard.html) ── */
+  .mobile-view .kpi-row {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px;
+    padding: 0 10px;
+  }
+
+  .mobile-view .chart-row {
+    flex-direction: column;
+  }
+
+  .mobile-view .chart-half {
+    width: 100% !important;
+  }
+
+  .mobile-view .dash-topbar {
+    padding: 10px;
+  }
+
+  .mobile-view .dash-nav {
+    display: none !important;
+  }
+
+  /* ── UI Enhancements ─────────────────────── */
+  .mobile-view .primary-btn, 
+  .mobile-view .secondary-btn, 
+  .mobile-view .ghost-btn {
+    min-height: 44px;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  /* Gesture Feedback Styles */
+  .mobile-view .gesture-feedback {
+    position: absolute;
+    top: 50%;
+    width: 80px;
+    height: 80px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    animation: gesture-pulse 0.5s ease-out;
+    z-index: 100;
+  }
+
+  .mobile-view .gesture-feedback.rewind { left: 10%; }
+  .mobile-view .gesture-feedback.fast-forward { right: 10%; }
+
+  @keyframes gesture-pulse {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: scale(1.5); opacity: 0; }
+  }
+
+  /* Skeleton Loaders */
+  .mobile-view .tile.is-loading {
+    background: linear-gradient(90deg, #121820 25%, #1a222e 50%, #121820 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+  }
+
+  @keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+}

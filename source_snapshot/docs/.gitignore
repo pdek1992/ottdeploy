@@ -1,0 +1,46 @@
+# Local Media Directories
+input/
+output/
+workdir/
+success_video/
+failed_video/
+
+# Node dependencies and logs
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Secrets and Sensitive Data
+secrets.js
+config.json
+keys.json
+Grafana-cloud-data.md
+plaintext_keys/
+web-ott/keys/
+readme_codeflow.md
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# IDE/Editor files
+.vscode/
+.idea/
+
+# Local scripts/batch files (Optional: Keep these local-only)
+start_metrics.bat
+run_metrics.js
+package.json
+package-lock.json
+
+# Build and android generator files
+generate_android_app.py
+build_output.txt
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+AndroidApp/
+secrets.js
+#keys/observability.json

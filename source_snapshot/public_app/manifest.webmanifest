@@ -1,0 +1,20 @@
+{
+  "name": "VigilSiddhi OTT",
+  "short_name": "VigilSiddhi",
+  "description": "A cinematic streaming experience with VigilSiddhi OTT.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#06080d",
+  "theme_color": "#06080d",
+  "categories": ["entertainment", "video"],
+  "icons": [
+    {
+      "src": "./assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

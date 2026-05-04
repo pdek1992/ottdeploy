@@ -1,0 +1,17 @@
+<svg width="320" height="320" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="profileBg" x1="28" y1="34" x2="284" y2="296" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#101B28"/>
+      <stop offset="1" stop-color="#090D13"/>
+    </linearGradient>
+    <linearGradient id="profileGlow" x1="88" y1="70" x2="236" y2="248" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3CE6DC"/>
+      <stop offset="0.5" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#FF8A3D"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="320" rx="84" fill="url(#profileBg)"/>
+  <circle cx="160" cy="118" r="52" fill="url(#profileGlow)" fill-opacity="0.92"/>
+  <path d="M74 266C90 214 132 184 160 184C188 184 230 214 246 266" stroke="url(#profileGlow)" stroke-width="26" stroke-linecap="round"/>
+  <circle cx="160" cy="160" r="122" stroke="white" stroke-opacity="0.06"/>
+</svg>
