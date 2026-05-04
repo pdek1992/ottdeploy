@@ -207,24 +207,35 @@ on conflict do nothing;
 ```
 
 ## 3. Vercel Setup
-1. Push the updated codebase to a GitHub repository.
-2. In Vercel, import the GitHub repository.
-3. Set the Framework Preset to **Other** (or Node.js).
-4. Add the following **Environment Variables** in Vercel:
-   - `SUPABASE_URL`: Your Supabase Project URL
-   - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase Service Role Key (Keep this secret!)
-   - `SESSION_SECRET`: A random string for signing cookies (e.g., generate with `openssl rand -hex 32`)
-   - `CRON_SECRET`: A secret to protect cron jobs (e.g., `my-cron-secret`)
+1. **Push to GitHub**: Ensure the latest code is on the `vercel` branch.
+2. **Import to Vercel**:
+   - Go to [vercel.com](https://vercel.com).
+   - Click "Add New" -> "Project".
+   - Import your `ott` repository.
+3. **Configure Project**:
+   - **Framework Preset**: Select `Other`.
+   - **Build and Output Settings**:
+     - **Output Directory**: Enter `public` (this ensures `public/index.html` is served at the root `/`).
+     - **Build Command**: Leave empty (or `npm run build`).
+     - **Install Command**: `npm install`.
+4. **Environment Variables**: Add all variables listed below (refer to Supabase API settings and Cloudflare dashboard):
+   - `SUPABASE_URL`: Your Supabase Project URL.
+   - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase `service_role` key (required for private schema access).
+   - `SESSION_SECRET`: A random 32-char hex string.
+   - `CRON_SECRET`: A secret for your cron jobs (matching the one in Vercel settings).
    - `APP_BASE_URL`: `https://webott.prashantkadam.in`
    - `CDN_BASE_URL`: `https://ott.prashantkadam.in`
-   - `GRAFANA_PROM_URL`: Your Grafana Prometheus URL
-   - `GRAFANA_PROM_USER`: Your Grafana user ID
-   - `GRAFANA_PROM_API_KEY`: Your Grafana API key
-   - `CF_ACCOUNT_ID`: Cloudflare account ID
-   - `CF_ZONE_ID`: Cloudflare zone ID
-   - `CF_API_TOKEN`: Cloudflare API token
-5. Deploy the project.
-6. Once deployed, add your custom domain `webott.prashantkadam.in` in Vercel Domain settings.
+   - `GRAFANA_PROM_URL`: From Grafana Cloud "Prometheus" -> "Remote Write Endpoint".
+   - `GRAFANA_PROM_USER`: From Grafana Cloud "Prometheus" -> "User ID".
+   - `GRAFANA_PROM_API_KEY`: A Grafana Cloud API Token with "MetricsPush" permissions.
+   - `CF_ACCOUNT_ID`: Your Cloudflare Account ID.
+   - `CF_ZONE_ID`: Your Cloudflare Zone ID for `prashantkadam.in`.
+   - `CF_API_TOKEN`: A Cloudflare API Token with "Analytics Read" permissions.
+5. **Deploy**: Click "Deploy".
+6. **Custom Domain**: 
+   - Once deployed, go to **Settings** -> **Domains**.
+   - Add `webott.prashantkadam.in`.
+   - Configure your DNS provider (Cloudflare) with the CNAME record provided by Vercel.
 
 ## 4. Supabase Auth Note
 The login API uses `public.access_users` and `private.user_credentials`. To create a user with a password, you should use the `POST /api/admin/sync-user` (or similar utility) to hash the password properly before inserting it into the `private.user_credentials` table. 
@@ -234,3 +245,21 @@ The login API uses `public.access_users` and `private.user_credentials`. To crea
 - `/api`: Contains Vercel serverless functions (Auth, Catalog, Playback License, Metrics, Cron).
 - `/supabase/migrations`: Contains the SQL schema file.
 - `vercel.json`: Configuration for routing and cron jobs.
+
+---
+
+### 📊 Observability & Metrics
+
+The platform uses a hybrid observability stack to maximize visibility on Vercel Hobby plans:
+
+1.  **Vercel Analytics & Speed Insights**: Integrated via standard Vercel script tags in `index.html`. View these in the Vercel Dashboard.
+2.  **Vercel Edge Metrics**: Captured via `middleware.js`. Every request reports its region (`x-vercel-id`), cache status (`x-vercel-cache`), and country to Prometheus.
+3.  **Web Vitals (Prometheus)**: Custom tracking in `observability.js` reports RUM performance (LCP, FID, CLS, TTFB) directly to your Grafana/Prometheus instance.
+4.  **CDN Health (Cloudflare)**: The `api/cron/cdn-metrics` task pulls aggregated data centers, status codes, and device metrics from Cloudflare.
+
+**Prometheus Measurements:**
+- `vercel_edge_metrics`: Request-level data from the edge.
+- `web_vitals`: UX performance scores (LCP, FID, CLS, TTFB, FCP).
+- `client_metrics`: Playback QoE (buffering, bitrate).
+- `cdn_summary`: Cloudflare aggregated performance.
+

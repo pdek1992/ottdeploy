@@ -52,6 +52,36 @@
     };
   }
 
+  const vitals = {
+    LCP: 0,
+    FID: 0,
+    CLS: 0,
+    TTFB: 0,
+    FCP: 0
+  };
+
+  // Initialize Web Vitals tracking
+  try {
+    const po = new PerformanceObserver((entryList) => {
+      for (const entry of entryList.getEntries()) {
+        if (entry.entryType === 'largest-contentful-paint') vitals.LCP = entry.startTime;
+        if (entry.entryType === 'first-input') vitals.FID = entry.processingStart - entry.startTime;
+        if (entry.entryType === 'layout-shift' && !entry.hadRecentInput) vitals.CLS += entry.value;
+        if (entry.entryType === 'paint' && entry.name === 'first-contentful-paint') vitals.FCP = entry.startTime;
+      }
+    });
+    po.observe({ type: 'largest-contentful-paint', buffered: true });
+    po.observe({ type: 'first-input', buffered: true });
+    po.observe({ type: 'layout-shift', buffered: true });
+    po.observe({ type: 'paint', buffered: true });
+    
+    // TTFB
+    const nav = performance.getEntriesByType('navigation')[0];
+    if (nav) vitals.TTFB = nav.responseStart - nav.requestStart;
+  } catch (e) {
+    console.warn("[OBS] Vitals tracking not supported", e);
+  }
+
   function computeMetrics() {
     if (!session) return null;
 
@@ -85,7 +115,13 @@
         dropped_frames:       session.droppedFrames,
         rebuffer_count:       session.rebufferCount,
         device_type:          session.deviceType,
-        network_type:         session.networkType
+        network_type:         session.networkType,
+        // Include Vitals in heartbeat
+        vitals_lcp: vitals.LCP,
+        vitals_fid: vitals.FID,
+        vitals_cls: vitals.CLS,
+        vitals_ttfb: vitals.TTFB,
+        vitals_fcp: vitals.FCP
       }
     };
   }
@@ -104,6 +140,28 @@
       console.warn("[OBS] Push error:", err);
     }
   }
+
+  // Also push vitals on page load completion
+  window.addEventListener('load', () => {
+    setTimeout(async () => {
+      const nav = performance.getEntriesByType('navigation')[0];
+      if (nav) vitals.TTFB = nav.responseStart - nav.requestStart;
+      
+      await pushMetrics({
+        type: 'web_vitals',
+        data: {
+          lcp: vitals.LCP,
+          fid: vitals.FID,
+          cls: vitals.CLS,
+          ttfb: vitals.TTFB,
+          fcp: vitals.FCP,
+          device_type: detectDeviceType(),
+          network_type: detectNetworkType(),
+          url: window.location.pathname
+        }
+      });
+    }, 2000);
+  });
 
   const obs = {
     async onPlayIntent() {

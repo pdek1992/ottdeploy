@@ -25,6 +25,9 @@
   <script defer src="./app.js"></script>
   <link rel="stylesheet" href="./mobile.css" media="(max-width: 768px)" />
   <script defer src="./mobile.js"></script>
+  <!-- Vercel Insights & Analytics -->
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="/_vercel/speed-insights/script.js"></script>
 </head>
 
 <body>
@@ -49,12 +52,12 @@
       <p class="login-copy">Sign in to unlock personalized content and seamless playback.</p>
       <form id="loginForm" class="login-form">
         <label>
-          <span>Email</span>
-          <input id="emailInput" name="email" type="email" autocomplete="email" required />
+          <span>Email or User ID</span>
+          <input id="identifierInput" name="identifier" type="text" autocomplete="username" required placeholder="Enter email or user ID" />
         </label>
         <label>
-          <span>User ID</span>
-          <input id="userIdInput" name="userId" type="text" autocomplete="username" required />
+          <span>Password</span>
+          <input id="passwordInput" name="password" type="password" autocomplete="current-password" required placeholder="••••••••" />
         </label>
         <button id="loginButton" class="primary-btn" type="submit">
           <i data-lucide="log-in" aria-hidden="true"></i>

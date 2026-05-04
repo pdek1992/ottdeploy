@@ -71,8 +71,8 @@
       "topbar",
       "loginForm",
       "loginButton",
-      "emailInput",
-      "userIdInput",
+      "identifierInput",
+      "passwordInput",
       "deviceUnlockButton",
       "installButton",
       "authMessage",
@@ -225,11 +225,11 @@
 
   async function handleLogin(event) {
     event.preventDefault();
-    const identifier = els.emailInput.value.trim();
-    const password = els.userIdInput.value.trim(); // Reusing userId field for password
+    const identifier = els.identifierInput.value.trim();
+    const password = els.passwordInput.value.trim();
 
     if (!identifier || !password) {
-      setAuthMessage("Enter your email/userid and password.", true);
+      setAuthMessage("Enter your email/user ID and password.", true);
       return;
     }
 

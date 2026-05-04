@@ -34,7 +34,7 @@ function escLabel(value) {
 }
 
 function buildLineProtocol(metrics) {
-  const labels = [
+  const commonLabels = [
     `app=${escLabel("VigilSiddhi_OTT")}`,
     `region=${escLabel("IN")}`,
     `provider=${escLabel("cloudflare")}`,
@@ -42,16 +42,39 @@ function buildLineProtocol(metrics) {
   ].join(",");
 
   const tsNs = Date.now() * 1_000_000;
-  return [
-    `cdn_requests,${labels} value=${metrics.requests} ${tsNs}`,
-    `cdn_cached_requests,${labels} value=${metrics.cachedRequests} ${tsNs}`,
-    `cdn_bytes,${labels} value=${metrics.bytes} ${tsNs}`,
-    `cdn_cached_bytes,${labels} value=${metrics.cachedBytes} ${tsNs}`,
-    `cdn_page_views,${labels} value=${metrics.pageViews} ${tsNs}`,
-    `cdn_cache_hit_ratio,${labels} value=${metrics.cacheHitRatio.toFixed(4)} ${tsNs}`,
-    `cdn_error_rate,${labels} value=${metrics.errorRate.toFixed(4)} ${tsNs}`,
-    `cdn_origin_offload_ratio,${labels} value=${metrics.cacheHitRatio.toFixed(4)} ${tsNs}`
-  ].join("\n");
+  const lines = [
+    `cdn_summary,${commonLabels} requests=${metrics.requests},cached_requests=${metrics.cachedRequests},bytes=${metrics.bytes},cached_bytes=${metrics.cachedBytes},page_views=${metrics.pageViews},error_rate=${metrics.errorRate.toFixed(4)},cache_hit_ratio=${metrics.cacheHitRatio.toFixed(4)} ${tsNs}`
+  ];
+
+  // Add Status Code breakdown
+  if (metrics.statusCodes) {
+    for (const [status, count] of Object.entries(metrics.statusCodes)) {
+      lines.push(`cdn_status_codes,${commonLabels},status=${status} value=${count} ${tsNs}`);
+    }
+  }
+
+  // Add Data Center (Colo) breakdown
+  if (metrics.colos) {
+    for (const [colo, count] of Object.entries(metrics.colos)) {
+      lines.push(`cdn_colos,${commonLabels},colo=${escLabel(colo)} requests=${count} ${tsNs}`);
+    }
+  }
+
+  // Add Country breakdown
+  if (metrics.countries) {
+    for (const [country, count] of Object.entries(metrics.countries)) {
+      lines.push(`cdn_countries,${commonLabels},country=${escLabel(country)} requests=${count} ${tsNs}`);
+    }
+  }
+
+  // Add Device breakdown
+  if (metrics.devices) {
+    for (const [device, count] of Object.entries(metrics.devices)) {
+      lines.push(`cdn_devices,${commonLabels},device=${escLabel(device)} requests=${count} ${tsNs}`);
+    }
+  }
+
+  return lines.join("\n");
 }
 
 async function fetchCloudflareMetrics({ zoneId, apiToken }) {
@@ -60,8 +83,9 @@ async function fetchCloudflareMetrics({ zoneId, apiToken }) {
       viewer {
         zones(filter: { zoneTag: $zoneTag }) {
           httpRequestsAdaptiveGroups(
-            limit: 1
+            limit: 100
             filter: { datetime_geq: $start, datetime_leq: $end }
+            orderBy: [datetime_ASC]
           ) {
             sum {
               requests
@@ -69,10 +93,12 @@ async function fetchCloudflareMetrics({ zoneId, apiToken }) {
               bytes
               cachedBytes
               pageViews
-              responseStatusMap {
-                edgeResponseStatus
-                requests
-              }
+            }
+            dimensions {
+              edgeResponseStatus
+              edgeColoName
+              clientCountryName
+              clientDeviceType
             }
           }
         }
@@ -104,34 +130,65 @@ async function fetchCloudflareMetrics({ zoneId, apiToken }) {
     throw new Error(`Cloudflare GraphQL error: ${JSON.stringify(json.errors)}`);
   }
 
-  const sum = json?.data?.viewer?.zones?.[0]?.httpRequestsAdaptiveGroups?.[0]?.sum;
-  if (!sum) {
+  const groups = json?.data?.viewer?.zones?.[0]?.httpRequestsAdaptiveGroups;
+  if (!groups || groups.length === 0) {
     return {
       requests: 0,
       cachedRequests: 0,
       bytes: 0,
       cachedBytes: 0,
       pageViews: 0,
-      errorRate: 0
+      errorRate: 0,
+      statusCodes: {},
+      colos: {},
+      countries: {},
+      devices: {}
     };
   }
 
-  const statusMap = Array.isArray(sum.responseStatusMap) ? sum.responseStatusMap : [];
-  const errorRequests = statusMap.reduce((acc, item) => {
-    const code = Number(item.edgeResponseStatus || 0);
-    return acc + (code >= 400 ? Number(item.requests || 0) : 0);
-  }, 0);
+  const result = {
+    requests: 0,
+    cachedRequests: 0,
+    bytes: 0,
+    cachedBytes: 0,
+    pageViews: 0,
+    statusCodes: {},
+    colos: {},
+    countries: {},
+    devices: {}
+  };
 
-  const requests = Number(sum.requests || 0);
-  const cachedRequests = Number(sum.cachedRequests || 0);
+  let totalErrorRequests = 0;
+
+  for (const group of groups) {
+    const s = group.sum;
+    const d = group.dimensions;
+    const reqs = Number(s.requests || 0);
+
+    result.requests += reqs;
+    result.cachedRequests += Number(s.cachedRequests || 0);
+    result.bytes += Number(s.bytes || 0);
+    result.cachedBytes += Number(s.cachedBytes || 0);
+    result.pageViews += Number(s.pageViews || 0);
+
+    // Aggregate Dimensions
+    const status = d.edgeResponseStatus;
+    result.statusCodes[status] = (result.statusCodes[status] || 0) + reqs;
+    if (status >= 400) totalErrorRequests += reqs;
+
+    const colo = d.edgeColoName;
+    result.colos[colo] = (result.colos[colo] || 0) + reqs;
+
+    const country = d.clientCountryName;
+    result.countries[country] = (result.countries[country] || 0) + reqs;
+
+    const device = d.clientDeviceType;
+    result.devices[device] = (result.devices[device] || 0) + reqs;
+  }
 
   return {
-    requests,
-    cachedRequests,
-    bytes: Number(sum.bytes || 0),
-    cachedBytes: Number(sum.cachedBytes || 0),
-    pageViews: Number(sum.pageViews || 0),
-    errorRate: requests > 0 ? errorRequests / requests : 0
+    ...result,
+    errorRate: result.requests > 0 ? totalErrorRequests / result.requests : 0
   };
 }
 

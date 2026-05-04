@@ -42,19 +42,42 @@ export default async function handler(req, res) {
     // Example transformation of client metrics to line protocol
     // { type: 'playback_start', videoId: '...', ... }
     const tsNs = Date.now() * 1_000_000;
+    let measurement = "client_metrics";
     const labels = [
       `app=${escLabel("VigilSiddhi_OTT")}`,
-      `client=web`,
       `type=${escLabel(metrics.type || 'unknown')}`
-    ].join(",");
+    ];
+    
+    // Custom logic per metric type
+    if (metrics.type === 'vercel_edge_request') {
+      measurement = "vercel_edge_metrics";
+      if (metrics.data?.region) labels.push(`region=${escLabel(metrics.data.region)}`);
+      if (metrics.data?.cache) labels.push(`cache=${escLabel(metrics.data.cache)}`);
+      if (metrics.data?.ip_country) labels.push(`country=${escLabel(metrics.data.ip_country)}`);
+      if (metrics.data?.method) labels.push(`method=${escLabel(metrics.data.method)}`);
+    } else if (metrics.type === 'web_vitals') {
+      measurement = "web_vitals";
+      labels.push(`client=web`);
+      if (metrics.data?.device_type) labels.push(`device=${escLabel(metrics.data.device_type)}`);
+      if (metrics.data?.url) labels.push(`page=${escLabel(metrics.data.url)}`);
+    } else {
+      labels.push(`client=web`);
+    }
+
+    const labelStr = labels.join(",");
     
     // Flatten metrics.data into fields if present
     const fields = [];
     if (metrics.data && typeof metrics.data === 'object') {
       for (const [k, v] of Object.entries(metrics.data)) {
+        // Skip keys already used as labels to avoid redundancy
+        if (['region', 'cache', 'ip_country', 'method', 'device_type', 'url', 'type'].includes(k)) continue;
+
         if (typeof v === 'number') {
           fields.push(`${escLabel(k)}=${v}`);
         } else if (typeof v === 'string') {
+          // Use strings as tags if they are short/categorical, or fields if they are unique
+          // For Influx, we'll keep them as fields (quoted)
           fields.push(`${escLabel(k)}="${escLabel(v)}"`);
         }
       }
@@ -64,7 +87,7 @@ export default async function handler(req, res) {
       fields.push('count=1');
     }
 
-    const body = `client_metrics,${labels} ${fields.join(',')} ${tsNs}`;
+    const body = `${measurement},${labelStr} ${fields.join(',')} ${tsNs}`;
 
     const response = await fetch(writeUrl, {
       method: "POST",
