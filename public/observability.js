@@ -245,6 +245,22 @@
     pushTimer = setInterval(() => obs.flush(), PUSH_MS);
   }
 
+  // Inject Vercel Analytics & Speed Insights using the package logic
+  (async () => {
+    try {
+      // Use ESM imports to get the package behavior in a static site
+      const { inject } = await import('https://esm.sh/@vercel/analytics');
+      const { injectSpeedInsights } = await import('https://esm.sh/@vercel/speed-insights');
+      
+      inject();
+      injectSpeedInsights();
+      
+      console.info("[OBS] Vercel Analytics & Speed Insights initialized via package.");
+    } catch (e) {
+      console.warn("[OBS] Vercel package injection failed, falling back to script tags.", e);
+    }
+  })();
+
   window.OTT_OBS = obs;
   console.info("[OBS] Observability module loaded.");
 })();

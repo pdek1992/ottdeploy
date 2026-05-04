@@ -16,16 +16,23 @@
 
   .mobile-view .auth-screen {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     padding: 16px;
     gap: 16px;
     align-items: center;
+    justify-content: center;
+    min-height: 100vh;
   }
 
-  .mobile-view .auth-showcase,
+  .mobile-view .auth-showcase {
+    display: none !important; /* Hide showcase on small mobile to save space */
+  }
+
   .mobile-view .login-panel {
-    flex: 1;
+    width: 100%;
+    max-width: 400px;
     min-height: auto;
+    padding: 24px;
   }
 
   .mobile-view .topbar {

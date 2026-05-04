@@ -132,8 +132,14 @@
     ];
 
     for (const id of ids) {
-      els[id] = document.getElementById(id);
+      const el = document.getElementById(id);
+      if (el) {
+        els[id] = el;
+      } else {
+        console.warn(`[DEBUG] Element not found: #${id}`);
+      }
     }
+    console.log("[DEBUG] UI Elements Bound:", Object.keys(els));
   }
 
   function bindEvents() {

@@ -1,10 +1,26 @@
 import { NextResponse } from 'next/server';
 
 export const config = {
-  matcher: ['/((?!api|metrics/ingest|_next/static|_next/image|favicon.ico).*)', '/api/(?!metrics/ingest):path*'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
 };
 
 export function middleware(req) {
+  const url = new URL(req.url);
+  const pathname = url.pathname;
+
+  // Skip middleware for API routes and static files to avoid recursion and overhead
+  if (pathname.startsWith('/api/') || pathname.includes('.')) {
+    return NextResponse.next();
+  }
+
   const start = Date.now();
   const res = NextResponse.next();
 
