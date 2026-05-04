@@ -6,6 +6,8 @@ export default async function handler(req, res) {
   }
 
   try {
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+
     const { data: videos, error: videoError } = await supabase
       .from('catalog_videos')
       .select(`

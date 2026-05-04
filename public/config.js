@@ -17,7 +17,7 @@ window.OTT_CONFIG = {
   // Public playback origins
   cdnBaseUrl: "https://ott.prashantkadam.in",
   
-  logoUrl: "./assets/logo.png",
+  logoUrl: "./assets/logo-mark-192.png",
   thumbnailFileNames: ["thumbnail.webp", "thumbnail.jpg", "thumbnail.jpeg", "thumbnail.png"],
   
   // These are now handled server-side but kept here for UI default state if needed

@@ -1,4 +1,4 @@
-const CACHE_NAME = "ott-glass-shell-v6";
+const CACHE_NAME = "ott-glass-shell-v7";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,7 +8,8 @@ const APP_SHELL = [
   "./observability.js",
   "./dashboard.js",
   "./manifest.webmanifest",
-  "./assets/logo.png"
+  "./assets/logo-mark-192.png",
+  "./assets/logo-mark-512.png"
 ];
 
 self.addEventListener("install", (event) => {

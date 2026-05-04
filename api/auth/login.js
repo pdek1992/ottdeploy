@@ -9,7 +9,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { identifier, password } = req.body;
+  const identifier = String(req.body?.identifier || "").trim();
+  const password = String(req.body?.password || "");
   if (!identifier || !password) {
     return res.status(400).json({ error: 'Identifier and password are required' });
   }
@@ -18,7 +19,7 @@ export default async function handler(req, res) {
     // 1. Resolve user
     const { data: user, error: userError } = await supabase
       .from('access_users')
-      .select('id, role, email, legacy_user_id')
+      .select('id, role, email, legacy_user_id, display_name, subscription_tier, status')
       .or(`email.eq."${identifier}",legacy_user_id.eq."${identifier}"`)
       .single();
 
@@ -87,7 +88,7 @@ export default async function handler(req, res) {
       expires: expiresAt
     }));
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, user });
   } catch (err) {
     console.error("[LOGIN API ERROR]", err);
     return res.status(500).json({ 

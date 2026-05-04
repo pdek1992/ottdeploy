@@ -8,18 +8,16 @@
   <meta name="description" content="A cinematic streaming app experience." />
   <title>VigilSiddhi OTT</title>
   <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="icon" href="./assets/logo.png" />
-  <link rel="apple-touch-icon" href="./assets/logo.png" />
+  <link rel="icon" href="./assets/logo-mark-192.png" />
+  <link rel="apple-touch-icon" href="./assets/logo-mark-192.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/controls.css" />
+  <link rel="preload" href="./assets/hero-orbit.jpg" as="image" fetchpriority="high" />
+  <link rel="preload" href="./assets/logo-mark-192.png" as="image" fetchpriority="high" />
   <link rel="stylesheet" href="./styles.css" />
-  <script defer src="https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/shaka-player.ui.min.js"></script>
-  <script defer src="https://imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
-  <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="./config.js"></script>
   <script defer src="./observability.js"></script>
   <script defer src="./app.js"></script>
@@ -36,19 +34,58 @@
 
   <main id="authScreen" class="auth-screen">
     <section class="auth-showcase glass-panel" aria-label="Streaming preview">
-      <div class="auth-stat-grid">
-        <article class="auth-stat-card"></article>
-        <article class="auth-stat-card"></article>
-        <article class="auth-stat-card"></article>
+      <div class="auth-showcase-copy">
+        <p class="eyebrow">Cinematic Streaming Layer</p>
+        <h1>Fast sign-in, tailored discovery, and playback that resumes without friction.</h1>
+        <p class="auth-copy">
+          The same OTT workflow now lands with a sharper visual system: authenticate, open your personalized rails,
+          jump back into saved progress, and move straight into playback.
+        </p>
+        <div class="auth-pill-row" aria-label="Experience highlights">
+          <span class="auth-pill">Resume aware</span>
+          <span class="auth-pill">Device unlock</span>
+          <span class="auth-pill">DRM ready</span>
+        </div>
       </div>
-      <img class="auth-showcase-art" src="./assets/hero-orbit.jpg" alt="" />
+      <div class="auth-stat-grid">
+        <article class="auth-stat-card">
+          <span class="auth-stat-label">Library workflow</span>
+          <strong>Sign in, land on home, continue watching, then launch player.</strong>
+        </article>
+        <article class="auth-stat-card">
+          <span class="auth-stat-label">Session feel</span>
+          <strong>Lower friction at login by removing duplicate session fetches.</strong>
+        </article>
+        <article class="auth-stat-card">
+          <span class="auth-stat-label">Playback surface</span>
+          <strong>Adaptive rails, quick filters, and a persistent player intelligence panel.</strong>
+        </article>
+      </div>
+      <div class="auth-showcase-footer">
+        <div>
+          <span class="auth-showcase-label">What changes</span>
+          <p>Visual polish, faster first interaction, and the same familiar actions underneath.</p>
+        </div>
+        <div>
+          <span class="auth-showcase-label">What stays</span>
+          <p>Identifiers, session flow, rails, saved list behavior, and playback workflow remain intact.</p>
+        </div>
+      </div>
+      <img class="auth-showcase-art" src="./assets/hero-orbit.jpg" alt="" fetchpriority="high" />
     </section>
 
     <section class="login-panel glass-panel" aria-labelledby="loginTitle">
-      <img class="login-logo" src="./assets/logo.png" alt="OTT logo" />
-      <p class="eyebrow">Premium Streaming</p>
-      <h2 id="loginTitle">VigilSiddhi OTT</h2>
-      <p class="login-copy">Sign in to unlock personalized content and seamless playback.</p>
+      <div class="login-panel-shell">
+        <img class="login-logo" src="./assets/logo-mark-192.png" alt="OTT logo" fetchpriority="high" />
+        <p class="eyebrow">Premium Streaming</p>
+        <h2 id="loginTitle">VigilSiddhi OTT</h2>
+        <p class="login-copy">Sign in to unlock your personalized content, saved progress, and seamless playback.</p>
+        <div class="login-highlights" aria-label="Login highlights">
+          <span class="login-highlight">Email or legacy ID</span>
+          <span class="login-highlight">Optional device unlock</span>
+          <span class="login-highlight">Fast return to your rails</span>
+        </div>
+      </div>
       <form id="loginForm" class="login-form">
         <label>
           <span>Email or User ID</span>
@@ -75,6 +112,7 @@
           Install app
         </button>
       </div>
+      <p class="login-footnote">Use your account email or legacy user ID. Device unlock remains available on supported browsers.</p>
       <p id="authMessage" class="status-text" role="status"></p>
     </section>
   </main>
@@ -82,7 +120,7 @@
   <div id="appShell" class="app-shell" hidden>
     <header id="topbar" class="topbar glass-strip">
       <a class="brand" href="#home" aria-label="VigilSiddhi OTT home">
-        <img src="./assets/logo.png" alt="" />
+        <img src="./assets/logo-mark-192.png" alt="" />
         <span>VigilSiddhi OTT</span>
       </a>
 
@@ -140,7 +178,7 @@
 
     <section id="home" class="hero">
       <div class="hero-media">
-        <img id="heroImage" src="./assets/logo.png" alt="" />
+        <img id="heroImage" src="./assets/logo-mark-192.png" alt="" />
       </div>
       <div class="hero-sheen"></div>
 
@@ -200,6 +238,10 @@
           <i data-lucide="refresh-cw" aria-hidden="true"></i>
           Refresh library
         </button>
+        <div class="device-pill" aria-live="polite">
+          <span class="device-pill-label">Playback readiness</span>
+          <span id="deviceStatus" class="device-status">Checking device capabilities...</span>
+        </div>
       </div>
     </section>
 
@@ -298,9 +340,9 @@
       </div>
 
       <div class="player-grid">
-        <div id="videoContainer" class="video-container" data-shaka-player-container>
-          <video id="videoElement" data-shaka-player playsinline crossorigin="anonymous"
-            poster="./assets/logo.png"></video>
+      <div id="videoContainer" class="video-container" data-shaka-player-container>
+        <video id="videoElement" data-shaka-player playsinline crossorigin="anonymous"
+            poster="./assets/logo-mark-192.png"></video>
           <div id="adContainer" class="ad-container"></div>
           <div id="adOverlay" class="ad-overlay" hidden>
             <span>Ad break</span>

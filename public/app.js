@@ -6,6 +6,14 @@
   const MY_LIST_KEY = "ott-glass-my-list-v1";
   const DEVICE_KEY = "ott-glass-device-credential-v1";
   const WATCH_PROGRESS_KEY = "ott-glass-progress-v1";
+  const CATALOG_CACHE_KEY = "ott-glass-catalog-v1";
+  const CATALOG_CACHE_TTL = 5 * 60 * 1000;
+  const LUCIDE_SCRIPT_URL = "https://unpkg.com/lucide@latest/dist/umd/lucide.min.js";
+  const SHAKA_SCRIPT_URL = "https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/shaka-player.ui.min.js";
+  const SHAKA_STYLES_URL = "https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/controls.css";
+  const IMA_SCRIPT_URL = "https://imasdk.googleapis.com/js/sdkloader/ima3.js";
+  const scriptPromises = new Map();
+  const stylesheetPromises = new Map();
 
   const state = {
     currentUser: null,
@@ -30,7 +38,9 @@
     installPrompt: null,
     assistantVisible: false,
     lastProgressSavedAt: 0,
-    useDetachedMode: false
+    useDetachedMode: false,
+    lucideReady: false,
+    catalogLoaded: false
   };
 
   const els = {};
@@ -40,12 +50,15 @@
   async function boot() {
     bindElements();
     bindEvents();
+    setAuthMessage("Preparing experience...");
     drawIcons();
     updateShellChrome();
     registerServiceWorker();
-    await detectPlaybackDevice();
+    void detectPlaybackDevice().catch((error) => {
+      console.warn("[DEVICE DETECT]", error);
+    });
 
-    const session = readJson(SESSION_KEY);
+    const session = normalizeSessionUser(readJson(SESSION_KEY));
     if (session && (session.email || session.userId)) {
       state.currentUser = session;
       await enterApp();
@@ -57,7 +70,7 @@
     setInterval(async () => {
       if (state.currentUser && els.playerOverlay?.hidden !== false) {
          console.log("[AUTO-REFRESH] Scanning for new videos...");
-         await loadCatalog();
+         await loadCatalog({ preferCache: false });
          state.keyStore = null; // Clear key cache to pick up new DRM keys for new videos
          renderApp();
       }
@@ -248,7 +261,7 @@
     }
 
     setBusy(els.loginButton, true);
-    setAuthMessage("Checking credentials...");
+    setAuthMessage("Signing you in...");
 
     try {
       const response = await fetch(config.api.login, {
@@ -256,26 +269,24 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier, password })
       });
+      const result = await response.json().catch(() => ({}));
 
       if (!response.ok) {
         let errorMsg = "Unable to sign in.";
-        try {
-          const result = await response.json();
-          errorMsg = result.error || errorMsg;
-        } catch (e) {
+        if (result.error) {
+          errorMsg = result.error;
+        } else {
           errorMsg = `Server error (${response.status})`;
         }
         setAuthMessage(errorMsg, true);
         return;
       }
 
-      // After successful login, fetch the session to get user details
-      const sessionRes = await fetch(config.api.session);
-      if (!sessionRes.ok) {
-        throw new Error("Session fetch failed");
+      const user = normalizeSessionUser(result.user);
+      if (!user) {
+        throw new Error("Session payload missing");
       }
-      const { user } = await sessionRes.json();
-      
+
       state.currentUser = user;
       localStorage.setItem(SESSION_KEY, JSON.stringify(state.currentUser));
       await enterApp();
@@ -291,56 +302,136 @@
   async function enterApp() {
     els.authScreen.hidden = true;
     els.appShell.hidden = false;
-    
-    // Display name + Tier
-    const tier = state.currentUser.subscription_tier || "basic";
-    els.profileName.innerHTML = `${state.currentUser.display_name || state.currentUser.email || "Member"} <span class="tier-pill tier-${tier.toLowerCase()}">${tier}</span>`;
-    
-    await loadCatalog();
-    renderApp();
+    syncProfileChip();
+
+    const hydrated = hydrateCatalogFromCache();
+    if (hydrated) {
+      renderApp();
+      drawIcons();
+    }
+
+    await loadCatalog({ preferCache: false });
+    if (state.catalog.length || !hydrated) {
+      renderApp();
+    }
     drawIcons();
   }
 
   async function refreshData() {
     setToast("Refreshing...");
     state.keyStore = null;
-    await loadCatalog();
+    await loadCatalog({ preferCache: false });
     renderApp();
     drawIcons();
   }
 
-  function logout() {
+  async function logout() {
     closePlayer();
     setAssistantOpen(false);
     localStorage.removeItem(SESSION_KEY);
     state.currentUser = null;
+    state.catalogLoaded = false;
     els.appShell.hidden = true;
     els.authScreen.hidden = false;
+    els.loginForm?.reset();
     setAuthMessage("Signed out.");
+    try {
+      await fetch(config.api.logout, { method: "POST" });
+    } catch (error) {
+      console.warn("[LOGOUT]", error);
+    }
   }
 
-  async function loadCatalog() {
+  async function loadCatalog(options = {}) {
+    const { preferCache = true } = options;
+    const cachedVideos = preferCache ? readCatalogCache() : null;
+
+    if (cachedVideos?.length) {
+      applyCatalog(cachedVideos);
+    }
+
     try {
-      const response = await fetch(config.api.catalog);
+      const response = await fetch(config.api.catalog, { cache: "no-store" });
       if (!response.ok) throw new Error("Catalog fetch failed");
       
       const videos = await response.json();
-      const normalizedVideos = videos.map(normalizeVideo);
-      const byId = new Map();
-      
-      for (const video of normalizedVideos) {
-        byId.set(video.id, video);
-      }
-
-      state.catalog = normalizedVideos;
-      state.catalogById = byId;
-      state.featuredVideo = byId.get(config.featuredVideoId) || normalizedVideos[0] || null;
-      
+      applyCatalog(videos);
+      saveCatalogCache(videos);
       console.log(`[CATALOG] Loaded ${state.catalog.length} titles from Vercel API.`);
     } catch (error) {
       console.error("[CATALOG ERROR]", error);
-      setToast("Failed to load catalog.", "error");
+      if (!state.catalog.length) {
+        setToast("Failed to load catalog.", "error");
+      } else {
+        setToast("Showing the saved library while live refresh catches up.");
+      }
     }
+  }
+
+  function applyCatalog(videos) {
+    const normalizedVideos = (videos || []).map(normalizeVideo);
+    const byId = new Map();
+
+    for (const video of normalizedVideos) {
+      byId.set(video.id, video);
+    }
+
+    state.catalog = normalizedVideos;
+    state.catalogById = byId;
+    state.featuredVideo = byId.get(config.featuredVideoId) || normalizedVideos[0] || null;
+    state.catalogLoaded = normalizedVideos.length > 0;
+  }
+
+  function hydrateCatalogFromCache() {
+    const cachedVideos = readCatalogCache();
+    if (!cachedVideos?.length) {
+      return false;
+    }
+    applyCatalog(cachedVideos);
+    return true;
+  }
+
+  function readCatalogCache() {
+    const cached = readJson(CATALOG_CACHE_KEY);
+    if (!cached?.savedAt || !Array.isArray(cached.videos)) {
+      return null;
+    }
+    if (Date.now() - cached.savedAt > CATALOG_CACHE_TTL) {
+      return null;
+    }
+    return cached.videos;
+  }
+
+  function saveCatalogCache(videos) {
+    try {
+      localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify({
+        savedAt: Date.now(),
+        videos
+      }));
+    } catch (error) {
+      console.warn("[CATALOG CACHE]", error);
+    }
+  }
+
+  function normalizeSessionUser(user) {
+    if (!user || typeof user !== "object") {
+      return null;
+    }
+    return {
+      ...user,
+      userId: user.userId || user.legacy_user_id || user.legacyUserId || "",
+      displayName: user.displayName || user.display_name || "",
+      subscription_tier: user.subscription_tier || user.subscriptionTier || "basic"
+    };
+  }
+
+  function syncProfileChip() {
+    if (!els.profileName || !state.currentUser) {
+      return;
+    }
+    const tier = String(state.currentUser.subscription_tier || "basic").toLowerCase();
+    const label = escapeHtml(state.currentUser.displayName || state.currentUser.display_name || state.currentUser.email || "Member");
+    els.profileName.innerHTML = `${label} <span class="tier-pill tier-${tier}">${escapeHtml(tier)}</span>`;
   }
 
   function normalizeVideo(video) {
@@ -775,7 +866,7 @@
       const loadedUrl = await loadManifestWithFallback(video);
       state.currentManifestUrl = loadedUrl;
       prepareMediaSession(video);
-      prepareIma();
+      void prepareIma();
       if (options.resume) {
         seekToStoredProgress(video);
       }
@@ -792,6 +883,11 @@
   }
 
   async function ensureShaka() {
+    await Promise.all([
+      ensureStylesheet(SHAKA_STYLES_URL),
+      ensureScript(SHAKA_SCRIPT_URL)
+    ]);
+
     if (!window.shaka) {
       throw new Error("Shaka Player script is not loaded.");
     }
@@ -1094,8 +1190,19 @@
     }
   }
 
-  function prepareIma() {
-    if (state.imaReady || !window.google || !google.ima || !config.googleImaAdTag) {
+  async function prepareIma() {
+    if (state.imaReady || !config.googleImaAdTag) {
+      return;
+    }
+
+    try {
+      await ensureScript(IMA_SCRIPT_URL);
+    } catch (error) {
+      console.warn("[IMA]", error);
+      return;
+    }
+
+    if (!window.google || !google.ima) {
       return;
     }
 
@@ -1276,7 +1383,7 @@
     if (permission === "granted") {
       new Notification(config.appName || "OTT Glass", {
         body: "Notifications are enabled.",
-        icon: config.logoUrl || "./assets/logo.png"
+        icon: config.logoUrl || "./assets/logo-mark-192.png"
       });
       setToast("Notifications enabled.", "success");
     } else {
@@ -1382,13 +1489,11 @@
 
   async function detectPlaybackDevice() {
     const parts = [];
-    if (window.shaka) {
-      parts.push("Shaka");
-    }
-
     if (navigator.requestMediaKeySystemAccess) {
-      const clearKey = await supportsKeySystem("org.w3.clearkey");
-      const widevine = await supportsKeySystem("com.widevine.alpha");
+      const [clearKey, widevine] = await Promise.all([
+        supportsKeySystem("org.w3.clearkey"),
+        supportsKeySystem("com.widevine.alpha")
+      ]);
       if (clearKey) {
         parts.push("ClearKey");
       }
@@ -1405,7 +1510,7 @@
     }
 
     if (els.deviceStatus) {
-      // els.deviceStatus.textContent = mergeUnique(parts).join(" | ");
+      els.deviceStatus.textContent = mergeUnique(parts).join(" / ");
     }
   }
 
@@ -2165,13 +2270,13 @@
     candidates.push(`assets/thumbnails/${video.id}.jpeg`);
     
     // 5. Global logo fallback
-    candidates.push(config.logoUrl || "./assets/logo.png");
+    candidates.push(config.logoUrl || "./assets/logo-mark-192.png");
     
     return mergeUnique(candidates);
   }
 
   function firstThumbnail(video) {
-    return thumbnailCandidates(video)[0] || config.logoUrl || "./assets/logo.png";
+    return thumbnailCandidates(video)[0] || config.logoUrl || "./assets/logo-mark-192.png";
   }
 
   function setSmartImage(img, candidates) {
@@ -2183,10 +2288,10 @@
         img.src = safeCandidates[index];
       } else {
         img.onerror = null;
-        img.src = config.logoUrl || "./assets/logo.png";
+        img.src = config.logoUrl || "./assets/logo-mark-192.png";
       }
     };
-    img.src = safeCandidates[0] || config.logoUrl || "./assets/logo.png";
+    img.src = safeCandidates[0] || config.logoUrl || "./assets/logo-mark-192.png";
   }
 
 
@@ -2228,11 +2333,6 @@
       }
     }
     throw lastError || new Error("No JSON URL configured.");
-  }
-
-  function withCacheBust(url) {
-    const joiner = url.includes("?") ? "&" : "?";
-    return `${url}${joiner}_=${Date.now()}`;
   }
 
   function normalizeList(source, keys) {
@@ -2281,7 +2381,7 @@
     button.disabled = busy;
     button.dataset.originalText = button.dataset.originalText || button.textContent;
     if (busy) {
-      button.textContent = "Please wait";
+      button.textContent = "Signing in...";
     } else {
       button.innerHTML = '<i data-lucide="log-in" aria-hidden="true"></i> Sign in';
       drawIcons();
@@ -2314,7 +2414,81 @@
   function drawIcons() {
     if (window.lucide) {
       lucide.createIcons();
+      state.lucideReady = true;
+      return;
     }
+    void ensureLucide();
+  }
+
+  async function ensureLucide() {
+    if (window.lucide) {
+      return true;
+    }
+    await ensureScript(LUCIDE_SCRIPT_URL);
+    if (window.lucide) {
+      lucide.createIcons();
+      state.lucideReady = true;
+      return true;
+    }
+    return false;
+  }
+
+  async function ensureScript(src) {
+    if (!src) {
+      return false;
+    }
+    if (scriptPromises.has(src)) {
+      return scriptPromises.get(src);
+    }
+    const promise = new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) {
+        if (existing.dataset.loaded === "true") {
+          resolve(true);
+          return;
+        }
+        existing.addEventListener("load", () => resolve(true), { once: true });
+        existing.addEventListener("error", () => reject(new Error(`Failed to load ${src}`)), { once: true });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.onload = () => {
+        script.dataset.loaded = "true";
+        resolve(true);
+      };
+      script.onerror = () => reject(new Error(`Failed to load ${src}`));
+      document.head.appendChild(script);
+    });
+    scriptPromises.set(src, promise);
+    return promise;
+  }
+
+  async function ensureStylesheet(href) {
+    if (!href) {
+      return false;
+    }
+    if (stylesheetPromises.has(href)) {
+      return stylesheetPromises.get(href);
+    }
+    const promise = new Promise((resolve, reject) => {
+      const existing = document.querySelector(`link[href="${href}"]`);
+      if (existing) {
+        resolve(true);
+        return;
+      }
+
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = href;
+      link.onload = () => resolve(true);
+      link.onerror = () => reject(new Error(`Failed to load ${href}`));
+      document.head.appendChild(link);
+    });
+    stylesheetPromises.set(href, promise);
+    return promise;
   }
 
   function mergeUnique(values) {
