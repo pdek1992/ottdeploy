@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+// Standard Web API Response for Edge Middleware
+// No Next.js dependencies allowed here in a plain Vercel project
 
 export const config = {
   matcher: [
@@ -12,17 +13,17 @@ export const config = {
   ],
 };
 
-export function middleware(req) {
+export function middleware(req, event) {
   const url = new URL(req.url);
   const pathname = url.pathname;
 
   // Skip middleware for API routes and static files to avoid recursion and overhead
   if (pathname.startsWith('/api/') || pathname.includes('.')) {
-    return NextResponse.next();
+    return new Response(null, { headers: { 'x-middleware-next': '1' } });
   }
 
   const start = Date.now();
-  const res = NextResponse.next();
+  const res = new Response(null, { headers: { 'x-middleware-next': '1' } });
 
   // We use event.waitUntil to push metrics without blocking the response
   // Note: middleware in Vercel runs at the Edge.
@@ -53,12 +54,9 @@ export function middleware(req) {
     body: JSON.stringify(metricData),
   }).catch(() => {});
 
-  // Vercel Middleware doesn't have an explicit 'event' object in the signature 
-  // like Cloudflare Workers, but we can return the response.
-  // In Vercel, waitUntil is available on the request object in some environments
-  // or via the 'NextResponse' if using certain patterns.
-  // However, for simple middleware, fire-and-forget fetch is often sufficient 
-  // for small metrics, but may be unreliable.
+  if (event && typeof event.waitUntil === 'function') {
+    event.waitUntil(pushPromise);
+  }
   
   return res;
 }
