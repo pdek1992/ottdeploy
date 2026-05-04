@@ -337,8 +337,12 @@
   function normalizeVideo(video) {
     return {
       ...video,
-      id: video.slug,
-      mpdUrl: video.video_streams?.[0]?.manifest_url || "",
+      // API already sets id=slug; keep it consistent
+      id: video.slug || video.id,
+      // Prefer server-provided mpdUrl, fall back to CDN pattern
+      mpdUrl: video.mpdUrl || video.video_streams?.[0]?.manifest_url || `${(config.cdnBaseUrl || '').replace(/\/$/, '')}/${video.slug}/manifest.mpd`,
+      // Prefer server-provided thumbnail, fall back to CDN pattern
+      thumbnail: video.thumbnail || `${(config.cdnBaseUrl || '').replace(/\/$/, '')}/${video.slug}/thumbnail.jpeg`,
       adCuePoints: video.adCuePoints || config.adCuePoints || [],
       playable: true
     };
@@ -2101,21 +2105,34 @@
 
   function thumbnailCandidates(video) {
     const candidates = [];
+    
+    // 1. Prioritize standardized R2/CDN path with thumbnail.jpeg
+    if (config.cdnBaseUrl) {
+      candidates.push(`${trimSlash(config.cdnBaseUrl)}/${encodeURIComponent(video.id)}/thumbnail.jpeg`);
+      candidates.push(`${trimSlash(config.cdnBaseUrl)}/${encodeURIComponent(video.id)}/thumbnail.jpg`);
+    }
+
+    // 2. Original database-provided thumbnail if any
     if (video.thumbnail) {
       candidates.push(video.thumbnail);
     }
-    for (const fileName of config.thumbnailFileNames || []) {
+    
+    // 3. Various filename patterns on CDN
+    const patterns = ["thumbnail.webp", "thumbnail.png", "poster.jpg"];
+    for (const fileName of patterns) {
       if (config.cdnBaseUrl) {
         candidates.push(`${trimSlash(config.cdnBaseUrl)}/${encodeURIComponent(video.id)}/${fileName}`);
       }
-      if (config.r2BaseUrl) {
-        candidates.push(`${trimSlash(config.r2BaseUrl)}/${encodeURIComponent(video.id)}/${fileName}`);
-      }
-      if (config.localOutputBaseUrl) {
-        candidates.push(`${trimSlash(config.localOutputBaseUrl)}/${encodeURIComponent(video.id)}/${fileName}`);
-      }
     }
+
+    // 4. Local fallback assets
+    candidates.push(`assets/thumbnails/${video.id}.jpg`);
+    candidates.push(`assets/thumbnails/${video.id}.png`);
+    candidates.push(`assets/thumbnails/${video.id}.jpeg`);
+    
+    // 5. Global logo fallback
     candidates.push(config.logoUrl || "./assets/logo.png");
+    
     return mergeUnique(candidates);
   }
 

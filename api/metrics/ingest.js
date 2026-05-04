@@ -90,22 +90,39 @@ export default async function handler(req, res) {
 
     const body = `${measurement},${labelStr} ${fields.join(',')} ${tsNs}`;
 
-    const response = await fetch(writeUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain",
-        "Authorization": `Basic ${auth}`
-      },
-      body
-    });
+    // Abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
 
-    if (!response.ok) {
-      const text = await response.text();
-      console.error(`[METRICS ERROR] Grafana push failed (${response.status}): ${text}`);
-      return res.status(502).json({ 
-        error: 'Failed to forward metrics', 
-        targetStatus: response.status,
-        targetResponse: text 
+    try {
+      const response = await fetch(writeUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain",
+          "Authorization": `Basic ${auth}`
+        },
+        body,
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error(`[METRICS ERROR] Grafana push failed (${response.status}): ${text}`);
+        // Return 200 to the app even if Grafana push fails, to avoid 502/504
+        return res.status(200).json({ 
+          success: true, 
+          warning: 'Metrics forwarded with errors',
+          targetStatus: response.status 
+        });
+      }
+    } catch (fetchErr) {
+      clearTimeout(timeoutId);
+      console.error(`[METRICS ERROR] Fetch failed:`, fetchErr.message);
+      return res.status(200).json({ 
+        success: true, 
+        warning: 'Metrics ingest timeout or connection error'
       });
     }
 

@@ -27,14 +27,17 @@ export default async function handler(req, res) {
     // Transform and sort items within each rail
     const transformedRails = rails.map(rail => {
       // Sort items by their own sort_order
-      const sortedItems = rail.catalog_rail_items
+      const items = (rail.catalog_rail_items || [])
         .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-        .filter(item => item.catalog_videos) // Skip if video relation is missing
-        .map(item => item.catalog_videos.slug);
+        .filter(item => item.catalog_videos && item.catalog_videos.slug)
+        .map(item => ({
+          id: item.catalog_videos.slug,
+          slug: item.catalog_videos.slug
+        }));
 
       return {
         title: rail.title,
-        items: sortedItems
+        items: items.map(i => i.slug)
       };
     });
 
