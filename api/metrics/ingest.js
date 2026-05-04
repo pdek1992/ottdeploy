@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     // Given the previous scaffold used Line Protocol for Grafana Cloud, I will continue that pattern.
     
     const writeUrl = promUrl.includes("/api/prom/push") 
-      ? promUrl.replace("/api/prom/push", "/influx/api/v1/push/influx/write")
+      ? promUrl.replace("/api/prom/push", "/api/v1/push/influx/write")
       : promUrl;
 
     console.log(`[DEBUG] Metrics Write URL: ${writeUrl}`);

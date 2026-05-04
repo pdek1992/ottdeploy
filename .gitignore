@@ -1,48 +1,42 @@
-# Local Media Directories
+# Dependencies
+node_modules/
+.vercel
+.env
+
+# Local Test Scripts
+server.js
+test-login.js
+check-catalog.js
+debug-supabase.js
+node-server.js
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Media/Build outputs
 input/
 output/
 workdir/
 success_video/
 failed_video/
+build_output.txt
 
-# Node dependencies and logs
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Secrets and Sensitive Data
+# Secrets
 secrets.js
 config.json
 keys.json
-Grafana-cloud-data.md
 plaintext_keys/
 web-ott/keys/
-readme_codeflow.md
 
-# OS specific files
-.DS_Store
-Thumbs.db
-
-# IDE/Editor files
-.vscode/
-.idea/
-
-# Local scripts/batch files (Optional: Keep these local-only)
-start_metrics.bat
-run_metrics.js
-package.json
-package-lock.json
-
-# Build and android generator files
-generate_android_app.py
-build_output.txt
+# Android
 .gradle/
 gradle/
 gradlew
 gradlew.bat
 AndroidApp/
-secrets.js
-#keys/observability.json
-.env.example
-.vercel
+generate_android_app.py

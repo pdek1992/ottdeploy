@@ -29,6 +29,7 @@ export default async function handler(req, res) {
       // Sort items by their own sort_order
       const sortedItems = rail.catalog_rail_items
         .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+        .filter(item => item.catalog_videos) // Skip if video relation is missing
         .map(item => item.catalog_videos.slug);
 
       return {

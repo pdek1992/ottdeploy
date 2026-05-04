@@ -16,7 +16,7 @@ function resolveGrafanaWriteUrl() {
 
   const promUrl = readEnv("GRAFANA_PROM_URL");
   if (promUrl.includes("/api/prom/push")) {
-    return promUrl.replace("/api/prom/push", "/influx/api/v1/push/influx/write");
+    return promUrl.replace("/api/prom/push", "/api/v1/push/influx/write");
   }
   return promUrl;
 }

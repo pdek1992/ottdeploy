@@ -1,0 +1,10 @@
+{
+  "name": "vigilsiddhi-ott-metrics",
+  "version": "1.0.0",
+  "description": "CDN Metrics Collector for VigilSiddhi OTT",
+  "main": "cdn_collector.js",
+  "dependencies": {
+    "snappyjs": "^0.6.1",
+    "protobufjs": "^7.2.5"
+  }
+}

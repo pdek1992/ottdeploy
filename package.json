@@ -1,0 +1,19 @@
+{
+  "name": "vigilsiddhi-ott-vercel",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "echo 'No start script needed, Vercel Serverless'",
+    "build": "echo 'No build script needed'"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
+    "bcryptjs": "^3.0.3",
+    "cookie": "^0.6.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  }
+}
